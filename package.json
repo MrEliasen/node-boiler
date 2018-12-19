@@ -6,7 +6,7 @@
         "postinstall": "cross-env NODE_ENV=development babel-node scripts/postinstall.js --presets env,stage-2",
         "build:clean": "rimraf ./build",
         "build:src": "cross-env NODE_ENV=production babel src --out-dir build --source-maps cheap-module-source-map",
-        "build:utils": "babel utils --out-dir build/utils",
+        "build:utils": "babel src/utils --out-dir build/utils",
         "build:copy": "copyfiles -u 1 ./src/static/* ./build",
         "build": "npm run build:clean && npm run build:utils && npm run build:src && npm run build:copy",
         "dev": "cross-env NODE_ENV=development nodemon -L ./src --inspect --exec babel-node --presets env,stage-2",
