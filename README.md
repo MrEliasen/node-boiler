@@ -18,4 +18,4 @@ Node Boiler Plate
 To deploy:
 
 1. Transpile the code `npm run build`
-2. Serve it `npm run serve`; 
+2. Serve it `npm run start`; 
