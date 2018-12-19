@@ -28,9 +28,9 @@ class File {
      */
     log({args, fileName, line, column}) {
         return new Promise((resolve) => {
-            if (this.loggerLevel < this.logLevel) {
-                return resolve();
-            }
+            //if (this.loggerLevel < this.logLevel) {
+            //    return resolve();
+            //}
 
             const {file, groupName} = this;
             const isArgObject = typeof arg === 'object';
