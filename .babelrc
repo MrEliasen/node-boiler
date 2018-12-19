@@ -1,0 +1,30 @@
+{
+    "presets": [
+        "env",
+        "stage-2"
+    ],
+    "env": {
+        "development": {
+            "plugins": [
+                ["module-resolver", {
+                    "root": ["./"],
+                    "alias": {
+                        "utils": "./utils",
+                        "components": "./src/components"
+                    }
+                }]
+            ]
+        },
+        "production": {
+            "plugins": [
+                ["module-resolver", {
+                    "root": ["./"],
+                    "alias": {
+                        "utils": "./build/utils",
+                        "components": "./build/components"
+                    }
+                }]
+            ]
+        }
+    }
+}
