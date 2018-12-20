@@ -21,6 +21,8 @@ class Server {
      */
     constructor() {
         this.boot();
+        // holds any extensions of the server, included from the load() method
+        this.extensions = [];
     }
 
     /**
@@ -67,10 +69,8 @@ class Server {
         // GEO IP lookup
         this.app.use(this.middlewareGeoIP);
 
-        // favicon
-        this.app.get('/favicon.ico', function(req, res) {
-            res.sendFile(path.join(__dirname, '../../static/favicon.ico'));
-        });
+        // load custom extension
+        this.loadExtension('example', 'example');
 
         // set static files directory
         this.app.use(express.static(path.join(__dirname, '../../public')));
@@ -83,6 +83,29 @@ class Server {
         // listen on port 80
         this.webServer.listen(process.env.PORT);
         this.logger.notification(`Server listening on port ${process.env.PORT}`);
+    }
+
+    /**
+     * Loads an extension of the server
+     * @param  {String} filePath The path to the file to include
+     * @param  {String} name     The name of the extension (alphanumerical)
+     */
+    loadExtension(filePath, name) {
+        try {
+            const extensionDir = path.join(__dirname, '../../extensions/');
+            const Extension = require(extensionDir + filePath);
+
+            if (Extension.default) {
+                this.extensions[name] = new Extension.default(this);
+            } else {
+                this.extensions[name] = new Extension(this);
+            }
+
+            this.logger.notification(`Extension "${name}" was loaded`);
+        } catch (err) {
+            this.logger.notification(`Failed to laod the extension "${name}"`);
+            this.logger.error(err);
+        }
     }
 
     /**
