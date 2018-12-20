@@ -27,7 +27,7 @@ if (!fs.existsSync(logsDirPath)) {
 const envFilePath = `${rootPath}/.env`;
 if (!fs.existsSync(envFilePath)) {
     logger.notification('Missing .env file, generating..');
-    execSync(`cp -n ${rootShellPath}/scripts/.env-sample ${rootShellPath}/.env`);
+    execSync(`cp -n ${rootShellPath}/.env-sample ${rootShellPath}/.env`);
 } else {
     logger.notification('.env file found, skipping..');
 }
