@@ -7,7 +7,7 @@
         "build:clean": "rimraf ./build",
         "build:src": "cross-env NODE_ENV=production babel src --out-dir build --source-maps cheap-module-source-map",
         "build:utils": "babel src/utils --out-dir build/utils",
-        "build:copy": "copyfiles -u 1 ./src/static/* ./build",
+        "build:copy": "copyfiles -u 1 ./src/public/* ./build && copyfiles -u 1 ./src/errors/* ./build",
         "build": "npm run build:clean && npm run build:utils && npm run build:src && npm run build:copy",
         "dev": "cross-env NODE_ENV=development nodemon -L ./src --inspect --exec babel-node --presets env,stage-2",
         "start": "cross-env NODE_ENV=production node ./build"

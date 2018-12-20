@@ -72,9 +72,12 @@ class Server {
             res.sendFile(path.join(__dirname, '../../static/favicon.ico'));
         });
 
+        // set static files directory
+        this.app.use(express.static(path.join(__dirname, '../../public')));
+
         // 404 page
         this.app.get('*', function(req, res) {
-            res.sendFile(path.join(__dirname, '../../static/404.html'));
+            res.sendFile(path.join(__dirname, '../../errors/404.html'));
         });
 
         // listen on port 80
