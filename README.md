@@ -4,7 +4,8 @@ Node Boiler Plate
 
 ## Requirements
 
-* Recommend Node v. 10.14.2 LTS or later
+* Node (recommend v10.14.2 LTS or later)
+* A MongoDB
 
 ## Installation
 
