@@ -8,13 +8,13 @@ import {execSync} from 'child_process';
 
 // utilities
 import {shellEscape} from 'utils/helper';
-import {newLogger} from 'utils/helper';
+import Logger from 'components/logger';
 
 // Root path of our application
 const rootPath = path.join(__dirname, '..');
 // escaped version of the root path, used in shell below
 const rootShellPath = shellEscape(rootPath);
-const logger = newLogger();
+const logger = new Logger();
 
 // create the logs dir if it does not exists
 logger.notification('Generating log direcotry');

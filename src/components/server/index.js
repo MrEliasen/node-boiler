@@ -10,7 +10,7 @@ import geoip from 'geoip-lite';
 import useragent from 'express-useragent';
 
 import Mailer from 'components/mailer';
-import {newLogger} from 'utils/helper';
+import Logger from 'components/logger';
 
 /**
  * Server Class
@@ -28,7 +28,7 @@ class Server {
      * @return {Promise}
      */
     async boot() {
-        this.logger = newLogger();
+        this.logger = new Logger();
         this.mailer = new Mailer(this.logger);
 
         await this.dbConnect();

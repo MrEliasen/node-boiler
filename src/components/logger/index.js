@@ -1,3 +1,4 @@
+import path from 'path';
 import chalk from 'chalk';
 import ConsoleLogger from './methods/console';
 import FileLogger from './methods/file';
@@ -12,13 +13,24 @@ class Logger {
      * Class constructor
      * @param  {Object} config Configuration options
      */
-    constructor(config) {
+    constructor(config = {}) {
         const levels = [
             'debug',
             'info',
             'warn',
             'error',
         ];
+
+        const rootPath = path.join(__dirname, '../../..');
+
+        config = {
+            level: process.env.NODE_ENV === 'production' ? 'error' : 'info',
+            debugFile: `${rootPath}/logs/debug.log`,
+            infoFile: `${rootPath}/logs/info.log`,
+            warnFile: `${rootPath}/logs/warn.log`,
+            errorFile: `${rootPath}/logs/error.log`,
+            ...config,
+        };
         const level = levels.indexOf(config.level);
 
         // create console loggers
