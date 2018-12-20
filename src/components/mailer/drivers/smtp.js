@@ -20,15 +20,16 @@ class SMTP {
                 pass: process.env.MAIL_SMTP_PASSWORD,
             },
         });
-        Promise.promisify(this.mailer.send);
+        Promise.promisify(this.mailer.sendMail);
         this.logger.notification(`Loaded "SMTP" mailer driver`);
     }
 
     /**
+     * https://nodemailer.com/usage/#sending-mail
      * @param {Object} mailOptions The mail options
      */
-    async sendMail(mailOptions) {
-        await this.mailer.sendAsync(mailOptions);
+    async send(mailOptions) {
+        await this.mailer.sendMailAsync(mailOptions);
     }
 }
 

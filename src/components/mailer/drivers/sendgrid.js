@@ -18,9 +18,10 @@ class Sendgrid {
     }
 
     /**
+     * https://www.npmjs.com/package/@sendgrid/mail#quick-start-hello-email
      * @param {Object} mailOptions The mail options
      */
-    async sendMail(mailOptions) {
+    async send(mailOptions) {
         await this.sgMail.sendAsync(mailOptions);
     }
 }

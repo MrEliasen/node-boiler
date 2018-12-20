@@ -37,7 +37,7 @@ export default class File {
     /**
      * @param {Object} mailOptions The mail options
      */
-    async sendMail(mailOptions) {
+    async send(mailOptions) {
         const fileName = path.join(
             this.outputPath,
             new Date().toISOString().replace(/[^0-9Z]+/g, '-')

@@ -35,8 +35,8 @@ class Mailer {
      * @param  {Object} mailOptions The mailer options
      * @return {Promise}
      */
-    async sendmail(mailOptions) {
-        await this.driver.sendMail(mailOptions);
+    async send(mailOptions) {
+        await this.driver.send(mailOptions);
     }
 }
 
