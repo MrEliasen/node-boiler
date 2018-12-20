@@ -16,5 +16,10 @@
     },
     "plugins": [
         "security"
-    ]
+    ],
+    "settings": {
+        "import/resolver": {
+            "babel-module": {}
+        }
+    },
 }
