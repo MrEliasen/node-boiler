@@ -5,7 +5,7 @@ Node Boiler Plate
 ## Requirements
 
 * Node (recommend v10.14.2 LTS or later)
-* A MongoDB
+* A MongoDB (I recommend (MongoDB Atlas)[https://www.mongodb.com/cloud/atlas]. They have a free tier.)
 
 ## Installation
 
