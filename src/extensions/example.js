@@ -11,13 +11,13 @@ class Example {
      */
     constructor(server) {
         this.server = server;
-        this.load();
+        this.urlPrefix = '/example';
     }
 
     /**
      * Loads the extension bits
      */
-    load() {
+    async load() {
         // setup API routes
         // eslint-disable-next-line
         this.routes = express.Router({
@@ -31,7 +31,7 @@ class Example {
             });
 
         // register the routes to the /api prefix and version
-        this.server.app.use('/example', this.routes);
+        this.server.app.use(this.urlPrefix, this.routes);
     }
 };
 

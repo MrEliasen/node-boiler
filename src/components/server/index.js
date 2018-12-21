@@ -71,7 +71,7 @@ class Server {
         this.app.use(this.middlewareGeoIP);
 
         // load custom extension
-        this.loadExtension('example', 'example');
+        await this.loadExtension('example', 'example');
 
         // set static files directory
         this.app.use(express.static(path.join(__dirname, '../../../public')));
@@ -91,7 +91,7 @@ class Server {
      * @param  {String} filePath The path to the file to include
      * @param  {String} name     The name of the extension (alphanumerical)
      */
-    loadExtension(filePath, name) {
+    async loadExtension(filePath, name) {
         try {
             const extensionDir = path.join(__dirname, '../../extensions/');
             const Extension = require(extensionDir + filePath);
@@ -102,9 +102,18 @@ class Server {
                 this.extensions[name] = new Extension(this);
             }
 
-            this.logger.notification(`Extension "${name}" was loaded`);
+            // wait for the extension to finish loading
+            await this.extensions[name].load();
+
+            let urlPrefix = '';
+            // if the extension adds routes, we include the urlprefix if found
+            if (this.extensions[name].urlPrefix) {
+                urlPrefix = `(route prefix: ${this.extensions[name].urlPrefix})`;
+            }
+
+            this.logger.notification(`[Extensions] "${name}" loaded ${urlPrefix}`);
         } catch (err) {
-            this.logger.notification(`Failed to laod the extension "${name}"`);
+            this.logger.notification(`[Extensions] Failed to load the extension "${name}"`);
             this.logger.error(err);
         }
     }
