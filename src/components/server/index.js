@@ -83,7 +83,7 @@ class Server {
 
         // listen on port 80
         this.webServer.listen(process.env.PORT);
-        this.logger.notification(`Server listening on port ${process.env.PORT}`);
+        this.logger.notification(`[Server] listening on port ${process.env.PORT}`);
     }
 
     /**
