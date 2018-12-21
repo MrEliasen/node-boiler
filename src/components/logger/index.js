@@ -11,9 +11,10 @@ import Notification from './methods/notification';
 class Logger {
     /**
      * Class constructor
+     * @param  {Server} server Server instance
      * @param  {Object} config Configuration options
      */
-    constructor(config = {}) {
+    constructor(server, config = {}) {
         const levels = [
             'debug',
             'info',
@@ -126,6 +127,8 @@ class Logger {
         this.warn = this.run(consoleWarn, fileWarn);
         this.error = this.run(consoleError, fileError);
         this.notification = this.run(notification);
+
+        this.notification(`[Logger] the logger was setup with log-level "${config.level}"`);
     }
 
     /**

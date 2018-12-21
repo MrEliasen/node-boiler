@@ -8,25 +8,29 @@ import SMTP from './drivers/smtp';
 class Mailer {
     /**
      * Class constructor
-     * @param  {Logger} logger The application logger
+     * @param  {Server} server  Server instance
      */
-    constructor(logger) {
+    constructor(server) {
+        this.server = server;
+
         try {
             switch (process.env.MAIL_DRIVER) {
                 case 'sendgrid':
-                    this.driver = new Sendgrid(logger);
+                    this.driver = new Sendgrid(this.server.logger);
                     break;
 
                 case 'file':
-                    this.driver = new MailToLog(logger);
+                    this.driver = new MailToLog(this.server.logger);
                     break;
 
                 case 'smtp':
-                    this.driver = new SMTP(logger);
+                    this.driver = new SMTP(this.server.logger);
                     break;
             }
+
+            this.server.logger.notification(`[Mailer] mailer driver "${this.driver.name}" loaded.`);
         } catch (err) {
-            logger.error(err);
+            this.server.logger.error(err);
         }
     }
 

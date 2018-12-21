@@ -9,12 +9,11 @@ class Sendgrid {
      * @param  {logger} logger The application logger
      */
     constructor(logger) {
+        this.name = 'SendGrid';
         this.logger = logger;
         this.sgMail = require('@sendgrid/mail');
         this.sgMail.setApiKey(process.env.MAIL_SENDGRID_API_KEY);
         Promise.promisify(this.sgMail.send);
-
-        this.logger.notification(`Loaded "Sendgrid" mailer driver`);
     }
 
     /**

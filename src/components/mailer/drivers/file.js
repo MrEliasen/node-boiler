@@ -20,9 +20,9 @@ export default class File {
      * @param  {logger} logger The application logger
      */
     constructor(logger) {
+        this.name = 'File';
         this.logger = logger;
         this.createOutputDir(process.env.MAIL_FILE_PATH);
-        this.logger.notification(`Loaded "File" mailer driver`);
     }
 
     /**

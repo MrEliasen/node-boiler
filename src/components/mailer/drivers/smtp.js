@@ -10,6 +10,7 @@ class SMTP {
      * @param  {logger} logger The application logger
      */
     constructor(logger) {
+        this.name = 'SMTP';
         this.logger = logger;
 
         this.mailer = mailer.createTransport({
@@ -21,7 +22,6 @@ class SMTP {
             },
         });
         Promise.promisify(this.mailer.sendMail);
-        this.logger.notification(`Loaded "SMTP" mailer driver`);
     }
 
     /**

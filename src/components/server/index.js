@@ -30,8 +30,8 @@ class Server {
      * @return {Promise}
      */
     async boot() {
-        this.logger = new Logger();
-        this.mailer = new Mailer(this.logger);
+        this.logger = new Logger(this);
+        this.mailer = new Mailer(this);
         this.database = new Database(this);
 
         await this.database.connect();
