@@ -1,7 +1,6 @@
 import path from 'path';
 import http from 'http';
 import express from 'express';
-import mongoose from 'mongoose';
 import bodyParser from 'body-parser';
 import helmet from 'helmet';
 import filter from 'content-filter';
@@ -11,6 +10,7 @@ import useragent from 'express-useragent';
 
 import Mailer from 'components/mailer';
 import Logger from 'components/logger';
+import Database from 'components/database';
 
 /**
  * Server Class
@@ -32,8 +32,9 @@ class Server {
     async boot() {
         this.logger = new Logger();
         this.mailer = new Mailer(this.logger);
+        this.database = new Database(this);
 
-        await this.dbConnect();
+        await this.database.connect();
 
         // https expected to be proxied with Nginx or Dokku.
         this.app = express();
@@ -106,20 +107,6 @@ class Server {
             this.logger.notification(`Failed to laod the extension "${name}"`);
             this.logger.error(err);
         }
-    }
-
-    /**
-     * Connect to the database
-     */
-    async dbConnect() {
-        mongoose.set('useCreateIndex', true);
-        // Connect to the MongoDB
-        await mongoose.connect(
-            process.env.DATABASE_HOST,
-            {
-                useNewUrlParser: true,
-            }
-        );
     }
 
     /**
