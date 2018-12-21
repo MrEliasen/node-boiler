@@ -4,13 +4,13 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import helmet from 'helmet';
 import filter from 'content-filter';
-import passport from 'passport';
 import geoip from 'geoip-lite';
 import useragent from 'express-useragent';
 
 import Mailer from 'components/mailer';
 import Logger from 'components/logger';
 import Database from 'components/database';
+import Authentication from 'components/authentication';
 
 /**
  * Server Class
@@ -23,6 +23,11 @@ class Server {
         this.boot();
         // holds any extensions of the server, included from the load() method
         this.extensions = [];
+
+        this.logger = new Logger(this);
+        this.mailer = new Mailer(this);
+        this.database = new Database(this);
+        this.authentication = new Authentication(this);
     }
 
     /**
@@ -30,10 +35,6 @@ class Server {
      * @return {Promise}
      */
     async boot() {
-        this.logger = new Logger(this);
-        this.mailer = new Mailer(this);
-        this.database = new Database(this);
-
         await this.database.connect();
 
         // https expected to be proxied with Nginx or Dokku.
@@ -62,7 +63,7 @@ class Server {
             ],
         }));
 
-        this.app.use(passport.initialize());
+        await this.authentication.load();
 
         // Set needed headers for the application.
         this.app.use(this.middlewareHeaders);
