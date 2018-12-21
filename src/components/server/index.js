@@ -38,7 +38,7 @@ class Server {
 
         // https expected to be proxied with Nginx or Dokku.
         this.app = express();
-        this.webServer = http.createServer(this.app);
+        this.webserver = http.createServer(this.app);
 
         // bind the logger and mailer to our app
         this.app.set('logger', this.logger);
@@ -82,7 +82,7 @@ class Server {
         });
 
         // listen on port 80
-        this.webServer.listen(process.env.PORT);
+        this.webserver.listen(process.env.PORT);
         this.logger.notification(`[Server] listening on port ${process.env.PORT}`);
     }
 
