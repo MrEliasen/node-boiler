@@ -1,3 +1,4 @@
+import mongoSanitizer from 'mongo-sanitize';
 import express from 'express';
 import passport from 'passport';
 import LocalStrategy from 'passport-local';
@@ -143,26 +144,26 @@ class Authentication {
 
         try {
             userAccount = new UserModel({
-                email: `no-email_${provider}-${profile.id}`,
+                email: mongoSanitizer(`no-email_${provider}-${profile.id}`),
             });
 
             await userAccount.save(); 
 
             userProfile = new ProviderModel({
-                provider: provider,
-                profileId: profile.id,
-                userId: userAccount._id,
+                provider: mongoSanitizer(provider),
+                profileId: mongoSanitizer(profile.id),
+                userId: mongoSanitizer(userAccount._id),
             });
             await userProfile.save();
         } catch (err) {
             this.server.logger.error(err);
 
             if (userAccount && userAccount._id) {
-                await UserModel.findByIdAndRemove(userAccount._id);
+                await UserModel.findByIdAndRemove(mongoSanitizer(userAccount._id));
             }
 
             if (userProfile && userProfile._id) {
-                await ProviderModel.findByIdAndRemove(userProfile._id);
+                await ProviderModel.findByIdAndRemove(mongoSanitizer(userProfile._id));
             }
 
             callback(err);
@@ -185,8 +186,8 @@ class Authentication {
             const providerName = req.params.provider.toLowerCase();
             const userProfile = await ProviderModel.findOne(
                 {
-                    provider: providerName,
-                    profileId: profile.id,
+                    provider: mongoSanitizer(providerName),
+                    profileId: mongoSanitizer(profile.id),
                 },
                 {userId: 1}
             );
@@ -206,7 +207,7 @@ class Authentication {
             }
 
             const user = await UserModel.findOne(
-                {_id: userProfile.userId},
+                {_id: mongoSanitizer(userProfile.userId)},
                 {email: 1, password: 1, sessionToken: 1}
             );
 
@@ -232,7 +233,7 @@ class Authentication {
     authenticateLocal = async (username, password, callback) => {
         try {
             const user = await UserModel.findOne(
-                {email: username},
+                {email: mongoSanitizer(username)},
                 {email: 1, password: 1, sessionToken: 1}
             );
 
