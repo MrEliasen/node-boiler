@@ -18,6 +18,7 @@
                     "alias": {
                         "utils": "./src/utils",
                         "components": "./src/components",
+                        "mongo-models": "./src/components/database/drivers/mongodb/models",
                         "extensions": "./src/extensions"
                     }
                 }]
@@ -31,6 +32,7 @@
                     "alias": {
                         "utils": "./build/utils",
                         "components": "./build/components",
+                        "mongo-models": "./build/components/database/drivers/mongodb/models",
                         "extensions": "./build/extensions"
                     }
                 }]

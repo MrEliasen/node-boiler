@@ -52,6 +52,7 @@
         "body-parser": "^1.18.3",
         "chalk": "^2.4.1",
         "content-filter": "^1.1.2",
+        "cookie-parser": "^1.4.3",
         "cross-env": "^5.2.0",
         "dotenv": "^6.2.0",
         "escape-string-regexp": "^1.0.5",
@@ -73,13 +74,14 @@
         "nodemailer": "^4.7.0",
         "nodemon": "^1.18.9",
         "passport": "^0.4.0",
+        "passport-github": "^1.1.0",
         "passport-local": "^1.0.0",
         "redis": "^2.8.0",
         "request": "^2.88.0",
         "request-promise": "^4.2.2",
         "rimraf": "^2.6.2",
         "uuid": "^3.3.2",
-        "validator": "^10.9.0",
+        "validator": "^10.10.0",
         "xss-filters": "^1.2.7"
     }
 }
