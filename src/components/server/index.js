@@ -162,9 +162,6 @@ class Server {
             const ip = xForwardedFor || req.get('cf-connecting-ip') ||req.connection.remoteAddress || req.get('x-real-ip');
             const geoipInfo = this.getIpInfo(ip);
 
-            console.log(req.ip);
-            console.log(req.ips);
-
             req.ipInfo = {
                 ipAddress: ip || 'Unknown',
                 city: 'Unknown',
