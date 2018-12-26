@@ -37,3 +37,4 @@ List of some of the common things you might want to access from the server objec
 | `server.extensions` | _{Array}_ | the array of loaded extensions. | see docs |
 | `server.app` | _{Object}_ | the express application. | see docs |
 | `server.webserver` | _{Object}_ | the HTTP/s web server. | see docs |
+| `server.authentication` | _{Object}_ | The authentication & sign up component. | see docs |
