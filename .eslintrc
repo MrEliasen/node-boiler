@@ -12,7 +12,9 @@
         "quotes": "off",
         "spaced-comment": "off",
         "indent": [1, 4, { "SwitchCase": 1 }],
-        "no-invalid-this": "off"
+        "no-invalid-this": "off",
+        "security/detect-object-injection": "off",
+        "security/detect-non-literal-require": "off"
     },
     "plugins": [
         "security"
