@@ -5,6 +5,7 @@ import jwt from 'jsonwebtoken';
 
 // import database models
 import UserModel from 'mongo-models/user';
+import ProviderModel from 'mongo-models/provider';
 
 /**
  * Authentication manager
@@ -53,16 +54,19 @@ class Authentication {
             caseSensitive: false,
         });
 
-        this.routes.post('/login/:provider',
-            (req, res, next) => {
-                this.passport.authenticate(
-                    req.params.provider.toLowerCase(),
-                    (err, user, info) => {
-                        this.handleResponse(req, res, err, user, info);
-                    },
-                )(req, res, next);
-            }
-        );
+        const middleWare = (req, res, next) => {
+            this.passport.authenticate(
+                req.params.provider.toLowerCase(),
+                (err, user, info) => {
+                    this.handleResponse(req, res, err, user, info);
+                },
+            )(req, res, next);
+        };
+
+        this.routes.get('/login/:provider', middleWare);
+        this.routes.post('/login/local', middleWare);
+        this.routes.get('/callback/:provider', middleWare);
+
         // register the routes to the /api prefix and version
         this.server.app.use(this.routePrefix, this.routes);
     }
@@ -73,9 +77,15 @@ class Authentication {
      * @return {Promise}
      */
     async setupOAuthProvider(providerName) {
-        const packageName = process.env[`AUTH_METHOD_${providerName}_PASSPORT_PACKAGE`];
-        const clientId = process.env[`AUTH_METHOD_${providerName}_CLIENT_ID`];
-        const clientSecret = process.env[`AUTH_METHOD_${providerName}_CLIENT_SECRET`];
+        const packageName = process.env[
+            `AUTH_METHOD_${providerName}_PASSPORT_PACKAGE`
+        ];
+        const clientId = process.env[
+            `AUTH_METHOD_${providerName}_CLIENT_ID`
+        ];
+        const clientSecret = process.env[
+            `AUTH_METHOD_${providerName}_CLIENT_SECRET`
+        ];
         const Strategy = require(`passport-${packageName}`).Strategy;
 
         if (!clientSecret || !clientId) {
@@ -88,6 +98,7 @@ class Authentication {
             clientID: clientId,
             clientSecret: clientSecret,
             callbackURL: `${process.env.BASE_URL}/auth/callback/${providerName.toLowerCase()}`,
+            passReqToCallback: true,
         }, this.authenticateOAuth));
     }
 
@@ -106,17 +117,41 @@ class Authentication {
 
     /**
      * Handles authentication requests from OAuth providers
-     * @param  {String}   accessToken  OAuth access token
-     * @param  {String}   refreshToken OAuth refresh token
-     * @param  {Object}   profile      User provider profile data
+     * @param  {Request}  req           Express Request object
+     * @param  {String}   accessToken   OAuth access token
+     * @param  {String}   refreshToken  OAuth refresh token
+     * @param  {Object}   profile       User provider profile data
      * @param  {Function} callback
      */
-    authenticateOAuth(accessToken, refreshToken, profile, callback) {
+    async authenticateOAuth(req, accessToken, refreshToken, profile, callback) {
         try {
-            //do stuff
-            done(null, {accessToken, refreshToken, profile});
+            const userProfile = await ProviderModel.findOne(
+                {
+                    provider: req.params.provider.toLowerCase(),
+                    profileId: profile.id,
+                },
+                {userId: 1}
+            );
+
+            if (!userProfile) {
+                callback(null, false, {error: 'No account is linked to this profile'});
+                return;
+            }
+
+            const user = await UserModel.findOne(
+                {_id: userProfile.userId},
+                {email: 1, password: 1, sessionToken: 1}
+            );
+
+            if (!user) {
+                callback(null, false, {error: 'Invalid login details.'});
+                return;
+            }
+
+            // if success
+            callback(null, user.toObject());
         } catch (err) {
-            done(err);
+            callback(err);
             return;
         }
     }
@@ -125,9 +160,9 @@ class Authentication {
      * Handles local authentication requests
      * @param  {String}   username The submitted username
      * @param  {String}   password The submitted password
-     * @param  {Function} done     Will pass on the result to passport
+     * @param  {Function} callback     Will pass on the result to passport
      */
-    async authenticateLocal(username, password, done) {
+    async authenticateLocal(username, password, callback) {
         try {
             const user = await UserModel.findOne(
                 {email: username},
@@ -135,19 +170,19 @@ class Authentication {
             );
 
             if (!user) {
-                done(null, false, {error: 'Invalid login details.'});
+                callback(null, false, {error: 'Invalid login details.'});
                 return;
             }
 
             if (!user.verifyPassword(password)) {
-                done(null, false, {error: 'Invalid login details.'});
+                callback(null, false, {error: 'Invalid login details.'});
                 return;
             }
 
             // if success
-            done(null, user.toObject());
+            callback(null, user.toObject());
         } catch (err) {
-            done(err);
+            callback(err);
             return;
         }
     }
@@ -163,6 +198,7 @@ class Authentication {
     handleResponse(req, res, err, user, info) {
         if (err) {
             this.server.logger.error(err);
+            res.status(400).json(info || {error: 'Invalid login request.'});
         }
 
         if (err || !user) {
