@@ -1,6 +1,5 @@
 import request from 'request-promise';
 import forge from 'node-forge';
-import jwt from 'jsonwebtoken';
 
 /**
  * Have I Been Pwned - Password checker
@@ -35,30 +34,6 @@ export async function havePasswordBeenPwned(password) {
     } catch (err) {
         throw err;
     }
-}
-
-/**
- * Generates an JWT with the specified data, and TTL
- * @param  {Object} data   The object to store in the jwt
- * @param  {String} expire The TTL of the token (eg. 7d or 1h)
- * @return {String} the generated JWT
- */
-export function createJWT(data, expire = null) {
-    return new Promise((resolve, reject) => {
-        jwt.sign(
-            data,
-            process.env.AUTH_SIGNING_SECRET,
-            {expiresIn: expire || process.env.AUTH_SESSION_TTL},
-            (err, token) => {
-                if (err) {
-                    reject(err);
-                    return;
-                }
-
-                resolve(token);
-            }
-        );
-    });
 }
 
 /**
