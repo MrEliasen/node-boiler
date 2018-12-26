@@ -79,8 +79,8 @@ export async function encrypt(payload) {
 
         // return ciphertext, iv and salt
         return {
-            iv: forge.util.bytesToHex(iv),
             cipherText: cipher.output.toHex(),
+            iv: forge.util.bytesToHex(iv),
         };
     } catch (err) {
         throw err;
