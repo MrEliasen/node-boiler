@@ -23,7 +23,7 @@ To deploy:
 
 ## Development
 
-On line 74 in `src/components/server`, we are loading in the "example" extension, which is found in `src/extensions`.
+On line 77 in `src/components/server`, we are loading in the "example" extension, which is found in `src/extensions`.
 
 The server object, from which you should be able to access any part of the application, is always passed on to all loaded extensions as the first parameter.
 
