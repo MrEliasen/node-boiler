@@ -31,9 +31,9 @@ List of some of the common things you might want to access from the server objec
 
 | Members  | Type | Description | More info|
 | --- | --- | --- | --- |
-| `server.logger` | _{Obeject}_ | the logger component. | [docs](https://github.com/MrEliasen/node-boiler/wiki/Logger) |
-| `server.database` | _{Obeject}_ | the database component. | see docs |
-| `server.mailer` | _{Obeject}_ | the mailer component. | [docs](https://github.com/MrEliasen/node-boiler/wiki/Mailer) |
+| `server.logger` | _{Object}_ | the logger component. | [docs](https://github.com/MrEliasen/node-boiler/wiki/Logger) |
+| `server.database` | _{Object}_ | the database component. | see docs |
+| `server.mailer` | _{Object}_ | the mailer component. | [docs](https://github.com/MrEliasen/node-boiler/wiki/Mailer) |
 | `server.extensions` | _{Array}_ | the array of loaded extensions. | see docs |
-| `server.app` | _{Obeject}_ | the express application. | see docs |
-| `server.webserver` | _{Obeject}_ | the HTTP/s web server. | see docs |
+| `server.app` | _{Object}_ | the express application. | see docs |
+| `server.webserver` | _{Object}_ | the HTTP/s web server. | see docs |
