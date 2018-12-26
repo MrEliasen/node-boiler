@@ -11,6 +11,7 @@ import ProviderModel from 'mongo-models/provider';
 
 // helper/security
 import {havePasswordBeenPwned} from 'utils/security';
+import {ucfirst} from 'utils/helper';
 
 /**
  * Authentication manager
@@ -46,7 +47,9 @@ class Authentication {
         });
 
         this.loadRoutes();
-        return Promise.all(providers);
+        await Promise.all(providers);
+
+        this.server.logger.notification(`[Authentication] loaded on route prefix: ${this.routePrefix}.`);
     }
 
     /**
@@ -120,6 +123,8 @@ class Authentication {
             callbackURL: `${process.env.BASE_URL}/auth/callback/${providerName.toLowerCase()}`,
             passReqToCallback: true,
         }, this.authenticateOAuth));
+
+        this.server.logger.notification(`[Authentication] loaded authentication strategy "${ucfirst(providerName.toLowerCase())}"`);
     }
 
     /**
@@ -133,6 +138,8 @@ class Authentication {
             session: false,
             failureFlash: false,
         }, this.authenticateLocal));
+
+        this.server.logger.notification(`[Authentication] loaded authentication strategy: "Local"`);
     }
 
     /**
