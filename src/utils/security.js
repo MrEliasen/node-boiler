@@ -18,7 +18,7 @@ export async function havePasswordBeenPwned(password) {
             uri: 'https://api.pwnedpasswords.com/range/' + prefix,
             headers: {
                 'api-version': 2,
-                'User-Agent': 'dialuup-server',
+                'User-Agent': 'node-boilder-server',
             },
         });
 
