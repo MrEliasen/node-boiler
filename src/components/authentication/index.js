@@ -55,17 +55,32 @@ class Authentication {
         });
 
         const middleWare = (req, res, next) => {
+            const provider = req.params.provider.toLowerCase();
+
+            // check if they want to sign up or not
+            if (`${this.routePrefix}/signup/${provider}` === req.originalUrl) {
+                res.cookie('provider-signup', provider, {
+                    maxAge: 1000 * 60 * 5,
+                    httpOnly: true,
+                    signed: true,
+                });
+            }
+
             this.passport.authenticate(
-                req.params.provider.toLowerCase(),
+                provider,
                 (err, user, info) => {
                     this.handleResponse(req, res, err, user, info);
                 },
             )(req, res, next);
         };
 
+        // provider signup and authentication
         this.routes.get('/login/:provider', middleWare);
-        this.routes.post('/login/local', middleWare);
+        this.routes.get('/signup/:provider', middleWare);
         this.routes.get('/callback/:provider', middleWare);
+        // local signup and authentication
+        this.routes.post('/login/local', middleWare);
+        this.routes.post('/signup/local', middleWare);
 
         // register the routes to the /api prefix and version
         this.server.app.use(this.routePrefix, this.routes);
@@ -116,6 +131,48 @@ class Authentication {
     }
 
     /**
+     * Crete a new account with the provider
+     * @param  {Request}  req           Express Request object
+     * @param  {Object}   profile       User provider profile data
+     * @param  {Function} callback
+     */
+    signupOauth = async (req, profile, callback) => {
+        const provider = req.params.provider.toLowerCase();
+        let userAccount;
+        let userProfile;
+
+        try {
+            userAccount = new UserModel({
+                email: `no-email_${provider}-${profile.id}`,
+            });
+
+            await userAccount.save(); 
+
+            userProfile = new ProviderModel({
+                provider: provider,
+                profileId: profile.id,
+                userId: userAccount._id,
+            });
+            await userProfile.save();
+        } catch (err) {
+            this.server.logger.error(err);
+
+            if (userAccount && userAccount._id) {
+                await UserModel.findByIdAndRemove(userAccount._id);
+            }
+
+            if (userProfile && userProfile._id) {
+                await ProviderModel.findByIdAndRemove(userProfile._id);
+            }
+
+            callback(err);
+            return;
+        }
+
+        callback(null, userAccount.toObject());
+    }
+
+    /**
      * Handles authentication requests from OAuth providers
      * @param  {Request}  req           Express Request object
      * @param  {String}   accessToken   OAuth access token
@@ -123,17 +180,27 @@ class Authentication {
      * @param  {Object}   profile       User provider profile data
      * @param  {Function} callback
      */
-    async authenticateOAuth(req, accessToken, refreshToken, profile, callback) {
+    authenticateOAuth = async (req, accessToken, refreshToken, profile, callback) => {
         try {
+            const providerName = req.params.provider.toLowerCase();
             const userProfile = await ProviderModel.findOne(
                 {
-                    provider: req.params.provider.toLowerCase(),
+                    provider: providerName,
                     profileId: profile.id,
                 },
                 {userId: 1}
             );
 
             if (!userProfile) {
+                // if they wanted to sign up, we instead create they account
+                if (req.signedCookies) {
+                    // but make sure the provider is the same
+                    if (req.signedCookies['provider-signup'] === providerName) {
+                        await this.signupOauth(req, profile, callback);
+                        return;
+                    }
+                }
+
                 callback(null, false, {error: 'No account is linked to this profile'});
                 return;
             }
@@ -151,8 +218,8 @@ class Authentication {
             // if success
             callback(null, user.toObject());
         } catch (err) {
+            this.server.logger.error(err);
             callback(err);
-            return;
         }
     }
 
@@ -162,7 +229,7 @@ class Authentication {
      * @param  {String}   password The submitted password
      * @param  {Function} callback     Will pass on the result to passport
      */
-    async authenticateLocal(username, password, callback) {
+    authenticateLocal = async (username, password, callback) => {
         try {
             const user = await UserModel.findOne(
                 {email: username},
@@ -209,7 +276,7 @@ class Authentication {
         jwt.sign(
             {
                 user,
-                ip: req.ipInfo.ipAddress,
+                ip: req.ipInfo ? req.ipInfo.ipAddress : '',
                 agent: req.useragent.source,
             },
             process.env.SECRETS_SIGNING_KEY,
