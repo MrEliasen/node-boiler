@@ -1,3 +1,4 @@
+import validator from 'validator';
 import mongoSanitizer from 'mongo-sanitize';
 import express from 'express';
 import passport from 'passport';
@@ -7,6 +8,9 @@ import jwt from 'jsonwebtoken';
 // import database models
 import UserModel from 'mongo-models/user';
 import ProviderModel from 'mongo-models/provider';
+
+// helper/security
+import {havePasswordBeenPwned} from 'utils/security';
 
 /**
  * Authentication manager
@@ -81,7 +85,7 @@ class Authentication {
         this.routes.get('/callback/:provider', middleWare);
         // local signup and authentication
         this.routes.post('/login/local', middleWare);
-        this.routes.post('/signup/local', middleWare);
+        this.routes.post('/signup/local', this.signupLocal);
 
         // register the routes to the /api prefix and version
         this.server.app.use(this.routePrefix, this.routes);
@@ -252,6 +256,64 @@ class Authentication {
         } catch (err) {
             callback(err);
             return;
+        }
+    }
+
+    /**
+     * Crete a new account with the provider
+     * @param  {Request}  req   Express Request object
+     * @param  {Response} res   Express Response object
+     * @param  {Function} callback
+     */
+    async signupLocal(req, res) {
+        let email = validator.stripLow('' + req.body.username, false).trim().toLowerCase();
+        let password = '' + req.body.password;
+
+        if (validator.isEmpty(email) || !validator.isEmail(email)) {
+            res.status(400).json({
+                error: 'Invalid email.',
+            });
+            return;
+        }
+
+        if (password.length < 8) {
+            res.status(400).json({
+                error: 'Your password must be at least 8 characters long.',
+            });
+            return;
+        }
+
+        const found = await havePasswordBeenPwned(password);
+        if (found) {
+            res.status(400).json({
+                error: 'Your password appeared in the HIBP database. This means it was compromised in previous breach corpuses, and is no longer secure. Please choose another.',
+            });
+            return;
+        }
+
+        const user = new UserModel({
+            email,
+            password,
+        });
+
+        try {
+            await user.save();
+
+            res.status(203).json({
+                message: 'Your account was created!',
+            });
+        } catch (err) {
+            if (err.code !== 11000) {
+                this.server.logger.error(err);
+
+                res.status(400).json({
+                    error: 'An error occurred while creating your account. Please try again in a moment.',
+                });
+            }
+
+            res.status(400).json({
+                error: 'An account is already signed up using that email address.',
+            });
         }
     }
 

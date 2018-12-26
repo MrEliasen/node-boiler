@@ -34,15 +34,15 @@ UserSchema.pre('save', async function(callback) {
         this.created = moment().utc().format();
     }
 
-    if (this.session_token === null || !this._id) {
+    if (this.sessionToken === null || !this._id) {
         // set the date for when it was created
-        this.session_token = uuid();
+        this.sessionToken = uuid();
     }
 
     if (!this._id || (this.isModified('password') && typeof this.password !== 'undefined')) {
         // hash the password with SHA256, as bcrypt is limited to 72 characters
         const passwordHMAC = forge.hmac.create();
-        passwordHMAC.start('sha256', process.env.SECURITY_HMAC_SECRET);
+        passwordHMAC.start('sha256', process.env.SECRETS_HMAC_KEY);
         passwordHMAC.update(this.password, 'utf8');
         const passwordHash = passwordHMAC.digest().toHex();
 
@@ -78,7 +78,7 @@ UserSchema.methods.verifyPassword = async function(submittedPassword) {
         );
 
         const passwordHMAC = forge.hmac.create();
-        passwordHMAC.start('sha256', process.env.SECURITY_HMAC_SECRET);
+        passwordHMAC.start('sha256', process.env.SECRETS_HMAC_KEY);
         passwordHMAC.update(submittedPassword, 'utf8');
         const passwordHash = passwordHMAC.digest().toHex();
 
