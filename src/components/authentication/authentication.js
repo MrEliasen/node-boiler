@@ -21,7 +21,6 @@ class Authentication {
         this.name = 'authentication';
         this.routePrefix = '/auth';
         this.server = server;
-        this.server.logger.notification(`[Authentication] instanciated "MongoDB" authentication.`);
     }
 
     /**

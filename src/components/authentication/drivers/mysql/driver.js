@@ -18,6 +18,7 @@ class AuthMySQL extends Authentication {
     constructor(server) {
         super(server);
         this.name = 'AuthMySQL';
+        this.server.logger.notification(`[Authentication] instanciated "${this.name}" authentication.`);
     }
 
     /**
