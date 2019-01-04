@@ -23,7 +23,7 @@ class MySQL {
      */
     async connect() {
         try {
-            this.connection = mysql.createConnection({
+            this.connection = await mysql.createConnection({
                 host: process.env.DATABASE_MYSQL_HOST,
                 user: process.env.DATABASE_MYSQL_USER,
                 password: process.env.DATABASE_MYSQL_PASSWORD,
