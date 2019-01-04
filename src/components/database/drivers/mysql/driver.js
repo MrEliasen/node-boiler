@@ -1,5 +1,6 @@
 import mysql from 'promise-mysql';
 import Promise from 'bluebird';
+import fs from 'fs';
 
 // create async functions of all the mysql methods
 Promise.promisifyAll(mysql);
@@ -30,6 +31,20 @@ class MySQL {
                 database: process.env.DATABASE_MYSQL_DATABASE,
                 port: process.env.DATABASE_MYSQL_PORT,
             });
+
+            await this.setup();
+        } catch (err) {
+            this.server.logger.error(err);
+        }
+    }
+
+    /**
+     * Load the database driver
+     */
+    async setup() {
+        try {
+            const tables = fs.readFileSync(__dirname + '/tables.sql', 'utf8');
+            this.connection.query(tables);
         } catch (err) {
             this.server.logger.error(err);
         }
