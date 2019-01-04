@@ -44,6 +44,7 @@ List of some of the common things you might want to access from the server objec
 
 | Members  | Type | Description | More info|
 | --- | --- | --- | --- |
+| `server` | _{Object}_ | the main server component. | docs |
 | `server.logger` | _{Object}_ | the logger component. | [docs](https://github.com/MrEliasen/node-boiler/wiki/Logger) |
 | `server.database` | _{Object}_ | the database component. | [docs](https://github.com/MrEliasen/node-boiler/wiki/Database-&-Drivers) |
 | `server.mailer` | _{Object}_ | the mailer component. | [docs](https://github.com/MrEliasen/node-boiler/wiki/Mailer) |
