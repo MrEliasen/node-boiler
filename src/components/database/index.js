@@ -9,6 +9,7 @@ class Database {
      */
     constructor(server) {
         this.server = server;
+        this.driver = null;
     }
 
     /**
