@@ -2,9 +2,6 @@ import mysql from 'promise-mysql';
 import Promise from 'bluebird';
 import fs from 'fs';
 
-// create async functions of all the mysql methods
-Promise.promisifyAll(mysql);
-
 /**
  * MySQL Database Driver
  */
