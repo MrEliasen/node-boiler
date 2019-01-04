@@ -23,7 +23,19 @@ To deploy:
 
 ## Development
 
-On line 77 in `src/components/server`, we are loading in the "example" extension, which is found in `src/extensions`.
+In `src/components/server`, inside the `boot` method, we are loading in the "example" extension, which is found in `src/extensions`.
+
+```javascript
+async boot() {
+    ...
+    // GEO IP lookup
+    this.app.use(this.middlewareGeoIP);
+
+    // load custom extension
+    await this.loadExtension('example', 'example'); // <------- HERE!
+    ...
+}
+```
 
 The server object, from which you should be able to access any part of the application, is always passed on to all loaded extensions as the first parameter.
 
