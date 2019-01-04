@@ -11,8 +11,7 @@ import useragent from 'express-useragent';
 import Mailer from 'components/mailer';
 import Logger from 'components/logger';
 import Database from 'components/database';
-import AuthenticationMongoDB from 'components/authentication/mongodb';
-import AuthenticationMySQL from 'components/authentication/mysql';
+import authentication from 'components/authentication';
 
 /**
  * Server Class
@@ -27,16 +26,7 @@ class Server {
         this.logger = new Logger(this);
         this.mailer = new Mailer(this);
         this.database = new Database(this);
-
-        switch (process.env.DATABASE_DRIVER) {
-            case 'mongodb':
-                this.authentication = new AuthenticationMongoDB(this);
-                break;
-
-            case 'mysql':
-                this.authentication = new AuthenticationMySQL(this);
-                break;
-        }
+        this.authentication = authentication(this);
 
         this.boot();
     }
