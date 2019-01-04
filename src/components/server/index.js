@@ -22,7 +22,7 @@ class Server {
      */
     constructor() {
         // holds any extensions of the server, included from the load() method
-        this.extensions = [];
+        this.extensions = {};
         this.logger = new Logger(this);
         this.mailer = new Mailer(this);
         this.database = new Database(this);
