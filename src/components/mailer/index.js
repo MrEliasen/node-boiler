@@ -28,7 +28,7 @@ class Mailer {
                     break;
             }
 
-            this.server.logger.notification(`[Mailer] mailer driver "${this.driver.name}" loaded.`);
+            this.server.logger.notification(`[Mailer] "${this.driver.name}" driver loaded.`);
         } catch (err) {
             this.server.logger.error(err);
         }

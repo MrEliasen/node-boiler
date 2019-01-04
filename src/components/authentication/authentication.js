@@ -45,7 +45,8 @@ class Authentication {
         this.loadRoutes();
         await Promise.all(providers);
 
-        this.server.logger.notification(`[Authentication] loaded on route prefix: ${this.routePrefix}.`);
+        this.server.logger.notification(`[Authentication] using "${this.driverName}" driver.`);
+        this.server.logger.notification(`[Authentication] route prefix: ${this.routePrefix}.`);
     }
 
     /**

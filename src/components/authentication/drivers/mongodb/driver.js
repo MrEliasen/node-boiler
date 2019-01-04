@@ -19,8 +19,7 @@ class AuthMongoDB extends Authentication {
      */
     constructor(server) {
         super(server);
-        this.name = 'AuthMongoDB';
-        this.server.logger.notification(`[Authentication] instanciated "${this.name}" authentication.`);
+        this.driverName = 'MongoDB';
     }
 
     /**

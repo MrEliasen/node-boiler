@@ -19,7 +19,7 @@ class Database {
         try {
             this.driver = new drivers[process.env.DATABASE_DRIVER](this.server);
             await this.driver.connect();
-            this.server.logger.notification(`[Database] database driver for "${this.driver.name}" loaded.`);
+            this.server.logger.notification(`[Database] "${this.driver.name}" driver loaded.`);
         } catch (err) {
             this.server.logger.error(err);
         }
