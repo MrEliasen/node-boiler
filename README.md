@@ -6,6 +6,7 @@ Node Boiler Plate
 
 * Node (recommend v10.14.2 LTS or later)
 * A MongoDB (I recommend [MongoDB Atlas](https://www.mongodb.com/cloud/atlas). They have a free tier.)
+* or a MariaDB/MySQL database (I recommended 10.3+ or 5.6+ respectively).
 
 ## Installation
 
