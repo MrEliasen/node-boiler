@@ -1,4 +1,5 @@
 import mysql from 'promise-mysql';
+import validator from 'validator';
 import Promise from 'bluebird';
 import fs from 'fs';
 
@@ -41,7 +42,16 @@ class MySQL {
     async setup() {
         try {
             const tables = fs.readFileSync(__dirname + '/tables.sql', 'utf8');
-            this.connection.query(tables);
+
+            await Promise.all(tables.split(';').map((table) => {
+                table = validator.stripLow(table, false);
+
+                if (validator.isEmpty(table)) {
+                    return true;
+                }
+
+                return this.connection.query(table);
+            }));
         } catch (err) {
             this.server.logger.error(err);
         }
