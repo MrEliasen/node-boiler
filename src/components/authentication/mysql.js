@@ -1,16 +1,14 @@
 import validator from 'validator';
-import mongoSanitizer from 'mongo-sanitize';
 import express from 'express';
 import passport from 'passport';
 import LocalStrategy from 'passport-local';
 import jwt from 'jsonwebtoken';
-
-// import database models
-import UserModel from 'mongo-models/user';
-import ProviderModel from 'mongo-models/provider';
+import bcrypt from 'bcrypt';
+import uuid from 'uuid/v4';
+import forge from 'node-forge';
 
 // helper/security
-import {havePasswordBeenPwned} from 'utils/security';
+import {havePasswordBeenPwned, decrypt, encrypt} from 'utils/security';
 import {ucfirst} from 'utils/helper';
 
 /**
@@ -25,6 +23,7 @@ class Authentication {
         this.name = 'authentication';
         this.routePrefix = '/auth';
         this.server = server;
+        this.server.logger.notification(`[Authentication] instanciated "MySQL/MariaDB" authentication.`);
     }
 
     /**
@@ -143,6 +142,74 @@ class Authentication {
     }
 
     /**
+     * Generate the HMAC SHA256 hash of a string
+     * @param {String} string The plaintext string to hash
+     * @return {String}        Base64 encoded string
+     */
+    hamcPassword(string) {
+        // hash the password with SHA256, as bcrypt is limited to
+        // 72 characters so we can still make use of the whole
+        // string, should it exceed the limit.
+        const passwordHMAC = forge.hmac.create();
+        passwordHMAC.start('sha256', process.env.SECRETS_HMAC_KEY);
+        passwordHMAC.update(string, 'utf8');
+        return passwordHMAC.digest().toHex();
+    }
+
+    /**
+     * Hashes and encrypts a password for storage
+     * @param  {String} string The plaintext string
+     * @return {String}        Base64 encoded string
+     */
+    async preparePassword(string) {
+        const passwordHMAC = this.hamcPassword(string);
+
+        // then hash the sha256 with bcrypt
+        const finalPasswordHash = await bcrypt.hash(
+            passwordHMAC,
+            parseInt(process.env.SECURITY_PASSWORD_ROUNDS, 10)
+        );
+
+        // and encrypt the hash
+        const encryptedPassword = await encrypt(finalPasswordHash);
+        return forge.util.encode64(JSON.stringify(encryptedPassword));
+    }
+
+    /**
+     * Checks if the passwords are the same
+     * @param  {String} accountPassword The account's unencrypted password hash,
+     *                                  from the database
+     * @param  {String} string          The plaintext string to compare
+     * @return {Boolean}
+     */
+    async verifyPassword(accountPassword, string) {
+        try {
+            if (validator.isEmpty(accountPassword) || validator.isEmpty(string)) {
+                return false;
+            }
+
+            const passwordCipherData = forge.util.decode64(
+                JSON.parse(accountPassword)
+            );
+
+            if (!passwordCipherData.iv || !passwordCipherData.cipherText) {
+                return false;
+            }
+
+            const decryptedPasswordHMAC = await decrypt(
+                passwordCipherData.cipherText,
+                passwordCipherData.iv
+            );
+
+            const passwordHMAC = this.hamcPassword(string);
+
+            return bcrypt.compare(passwordHMAC, decryptedPasswordHMAC);
+        } catch (err) {
+            return false;
+        }
+    }
+
+    /**
      * Crete a new account with the provider
      * @param  {Request}  req           Express Request object
      * @param  {Object}   profile       User provider profile data
@@ -195,15 +262,25 @@ class Authentication {
     authenticateOAuth = async (req, accessToken, refreshToken, profile, callback) => {
         try {
             const providerName = req.params.provider.toLowerCase();
-            const userProfile = await ProviderModel.findOne(
-                {
-                    provider: mongoSanitizer(providerName),
-                    profileId: mongoSanitizer(profile.id),
-                },
-                {userId: 1}
-            );
 
-            if (!userProfile) {
+            const userProfile = await this.server.database.driver.query({
+                sql: `SELECT
+                            user_id,
+                        FROM
+                            providers
+                        WHERE
+                            provider = ?
+                        AND
+                            profile_id = ?
+                        LIMIT
+                            1`,
+                values: [
+                    providerName,
+                    profile.id,
+                ],
+            });
+
+            if (!userProfile || !userProfile.user_id) {
                 // if they wanted to sign up, we instead create they account
                 if (req.signedCookies) {
                     // but make sure the provider is the same
@@ -217,18 +294,29 @@ class Authentication {
                 return;
             }
 
-            const user = await UserModel.findOne(
-                {_id: mongoSanitizer(userProfile.userId)},
-                {email: 1, password: 1, sessionToken: 1}
-            );
+            const user = await this.server.database.driver.query({
+                sql: `SELECT
+                            id,
+                            email,
+                            sessionToken
+                        FROM
+                            accounts
+                        WHERE
+                            id = ?
+                        LIMIT
+                            1`,
+                values: [
+                    userProfile.user_id,
+                ],
+            });
 
-            if (!user) {
+            if (!user || !user.id) {
                 callback(null, false, {error: 'Invalid login details.'});
                 return;
             }
 
             // if success
-            callback(null, user.toObject());
+            callback(null, {...user});
         } catch (err) {
             this.server.logger.error(err);
             callback(err);
@@ -243,26 +331,43 @@ class Authentication {
      */
     authenticateLocal = async (username, password, callback) => {
         try {
-            const user = await UserModel.findOne(
-                {email: mongoSanitizer(username)},
-                {email: 1, password: 1, sessionToken: 1}
-            );
+            const email = validator.stripLow('' + username, false).trim().toLowerCase();
+            const password = '' + password;
 
-            if (!user) {
+            if (validator.isEmpty(email) || !validator.isEmail(email)) {
+                res.status(400).json({error: 'Invalid login details.'});
+                return;
+            }
+
+            const user = await this.server.database.driver.query({
+                sql: `SELECT
+                            id,
+                            password,
+                            sessionToken
+                        FROM
+                            accounts
+                        WHERE
+                            email = ?
+                        LIMIT
+                            1`,
+                values: [
+                    email,
+                ],
+            });
+
+            if (!user || !user.id) {
                 callback(null, false, {error: 'Invalid login details.'});
                 return;
             }
 
-            if (!user.verifyPassword(password)) {
+            if (!this.verifyPassword(user.password, password)) {
                 callback(null, false, {error: 'Invalid login details.'});
                 return;
             }
 
-            // if success
-            callback(null, user.toObject());
+            callback(null, {...user});
         } catch (err) {
             callback(err);
-            return;
         }
     }
 
@@ -272,49 +377,68 @@ class Authentication {
      * @param  {Response} res   Express Response object
      * @param  {Function} callback
      */
-    async signupLocal(req, res) {
-        let email = validator.stripLow('' + req.body.username, false).trim().toLowerCase();
-        let password = '' + req.body.password;
-
-        if (validator.isEmpty(email) || !validator.isEmail(email)) {
-            res.status(400).json({
-                error: 'Invalid email.',
-            });
-            return;
-        }
-
-        if (password.length < 8) {
-            res.status(400).json({
-                error: 'Your password must be at least 8 characters long.',
-            });
-            return;
-        }
-
-        const found = await havePasswordBeenPwned(password);
-        if (found) {
-            res.status(400).json({
-                error: 'Your password appeared in the HIBP database. This means it was compromised in previous breach corpuses, and is no longer secure. Please choose another.',
-            });
-            return;
-        }
-
-        const user = new UserModel({
-            email,
-            password,
-        });
-
+    signupLocal = async (req, res) => {
         try {
-            await user.save();
+            const email = validator.stripLow('' + req.body.username, false).trim().toLowerCase();
+            const password = '' + req.body.password;
+
+            if (validator.isEmpty(email) || !validator.isEmail(email)) {
+                res.status(400).json({
+                    error: 'Invalid email.',
+                });
+                return;
+            }
+
+            if (password.length < 8) {
+                res.status(400).json({
+                    error: 'Your password must be at least 8 characters long.',
+                });
+                return;
+            }
+
+            const found = await havePasswordBeenPwned(password);
+            if (found) {
+                res.status(400).json({
+                    error: 'Your password appeared in the HIBP database. This means it was compromised in previous breach corpuses, and is no longer secure. Please choose another.',
+                });
+                return;
+            }
+
+            const preparedPassword = await this.preparePassword(password);
+
+            const result = await this.server.database.driver.query({
+                sql: `INSERT INTO
+                            accounts
+                            (
+                                email,
+                                password,
+                                sessionToken
+                            )
+                        VALUES
+                            (?,?,?)`,
+                values: [
+                    email,
+                    preparedPassword,
+                    uuid(),
+                ],
+            });
+
+            if (!result || !result.insertId) {
+                res.status(400).json({
+                    error: 'The server was unable to handle your request. Please try again in a moment.',
+                });
+                return;
+            }
 
             res.status(203).json({
                 message: 'Your account was created!',
             });
         } catch (err) {
-            if (err.code !== 11000) {
+            if (err.code !== 'ER_DUP_ENTRY') {
                 this.server.logger.error(err);
 
                 res.status(400).json({
-                    error: 'An error occurred while creating your account. Please try again in a moment.',
+                    error: 'The server was unable to handle your request. Please try again in a moment.',
                 });
             }
 
@@ -362,7 +486,7 @@ class Authentication {
                     return;
                 }
 
-                res.json({jwt: token, user});
+                res.json({jwt: token});
             }
         );
     }
