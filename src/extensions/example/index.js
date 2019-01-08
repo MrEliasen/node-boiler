@@ -29,6 +29,11 @@ class Example {
             .get((req, res) => {
                 res.send({hello: 'world'});
             });
+        // route requiring authentication
+        this.routes.route('/test')
+            .get(this.server.authentication.middleWareIsLoggedIn, (req, res) => {
+                res.send({hello: req.user});
+            });
 
         // register the routes to the /api prefix and version
         this.server.app.use(this.urlPrefix, this.routes);

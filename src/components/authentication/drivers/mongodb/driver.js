@@ -23,6 +23,57 @@ class AuthMongoDB extends Authentication {
     }
 
     /**
+     * Will check barer token header and assign the user to req.user
+     * @param  {Request}  req   Express Request object
+     * @param  {Response} res   Express Response object
+     * @param  {Function} next  Express next/callback
+     */
+    middleWareIsLoggedIn = async (req, res, next) => {
+        try {
+            const Authorization = '' + req.get('Authorization');
+            const decoded = jwt.verify(Authorization, process.env.SECRETS_SIGNING_KEY);
+
+            // check if the device name and ID matches
+            if (decoded.ip !== req.ipInfo ? req.ipInfo.ipAddress : '' || decoded.agent !== req.useragent.source) {
+                return null;
+            }
+
+            const user = await UserModel.findOne(
+                {_id: mongoSanitizer(decoded.id), sessionToken: decoded.sessionToken},
+                {_id: 1}
+            );
+
+            if (!user) {
+                res.status(401).json({
+                    error: 'Invalid session.',
+                });
+                return;
+            }
+
+            req.user = user.toObject();
+            next();
+        } catch (err) {
+            if (err.name && err.name === 'JsonWebTokenError') {
+                res.status(401).json({
+                    error: 'Your session is invalid. Please login again.',
+                });
+                return;
+            }
+
+            if (err.name && err.name === 'TokenExpiredError') {
+                res.status(401).json({
+                    error: 'Your session has expired. Please login again.',
+                });
+                return;
+            }
+
+            res.status(401).json({
+                error: 'Invalid session.',
+            });
+        }
+    };
+
+    /**
      * Crete a new account with the provider
      * @param  {Request}  req           Express Request object
      * @param  {Object}   profile       User provider profile data

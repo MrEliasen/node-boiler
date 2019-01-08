@@ -1,4 +1,5 @@
 import validator from 'validator';
+import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
 import uuid from 'uuid/v4';
 import forge from 'node-forge';
@@ -19,6 +20,69 @@ class AuthMySQL extends Authentication {
         super(server);
         this.driverName = 'MySQL';
     }
+
+    /**
+     * Will check barer token header and assign the user to req.user
+     * @param  {Request}  req   Express Request object
+     * @param  {Response} res   Express Response object
+     * @param  {Function} next  Express next/callback
+     */
+    middleWareIsLoggedIn = async (req, res, next) => {
+        try {
+            const Authorization = '' + req.get('Authorization');
+            const decoded = jwt.verify(Authorization, process.env.SECRETS_SIGNING_KEY);
+
+            // check if the device name and ID matches
+            if (decoded.ip !== req.ipInfo ? req.ipInfo.ipAddress : '' || decoded.agent !== req.useragent.source) {
+                return null;
+            }
+
+            const account = await this.server.database.driver.query({
+                sql: `SELECT
+                            id
+                        FROM
+                            account
+                        WHERE
+                            id = ?
+                        AND
+                            sessionToken = ?
+                        LIMIT
+                            1`,
+                values: [
+                    decoded._id,
+                    decoded.sessionToken,
+                ],
+            });
+
+            if (!account) {
+                res.status(401).json({
+                    error: 'Invalid session.',
+                });
+                return;
+            }
+
+            req.user = {...account};
+            next();
+        } catch (err) {
+            if (err.name && err.name === 'JsonWebTokenError') {
+                res.status(401).json({
+                    error: 'Your session is invalid. Please login again.',
+                });
+                return;
+            }
+
+            if (err.name && err.name === 'TokenExpiredError') {
+                res.status(401).json({
+                    error: 'Your session has expired. Please login again.',
+                });
+                return;
+            }
+
+            res.status(401).json({
+                error: 'Invalid session.',
+            });
+        }
+    };
 
     /**
      * Generate the HMAC SHA256 hash of a string
