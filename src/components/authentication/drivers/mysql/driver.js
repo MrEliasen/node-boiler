@@ -131,8 +131,8 @@ class AuthMySQL extends Authentication {
                 return false;
             }
 
-            const passwordCipherData = forge.util.decode64(
-                JSON.parse(accountPassword)
+            const passwordCipherData = JSON.parse(
+                forge.util.decode64(accountPassword)
             );
 
             if (!passwordCipherData.iv || !passwordCipherData.cipherText) {
@@ -303,7 +303,8 @@ class AuthMySQL extends Authentication {
                 return;
             }
 
-            if (!this.verifyPassword(user.password, password)) {
+            const validPassword = await this.verifyPassword(user.password, password);
+            if (!validPassword) {
                 callback(null, false, {error: 'Invalid login details.'});
                 return;
             }
