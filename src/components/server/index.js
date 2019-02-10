@@ -65,16 +65,11 @@ class Server {
             ],
         }));
 
-        await this.authentication.load();
-
         // Set needed headers for the application.
         this.app.use(this.middlewareHeaders);
 
         // GEO IP lookup
         this.app.use(this.middlewareGeoIP);
-
-        // load custom extension
-        await this.loadExtension('example', 'example');
 
         // set static files directory
         this.app.use(express.static(path.join(__dirname, '../../../public')));
@@ -83,6 +78,11 @@ class Server {
         this.app.get('*', function(req, res) {
             res.status(404).send('Page not found');
         });
+
+        await this.authentication.load();
+
+        // load custom extension
+        await this.loadExtension('example', 'example');
 
         // listen on port 80
         this.webserver.listen(process.env.PORT);
