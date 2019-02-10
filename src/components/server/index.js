@@ -74,15 +74,15 @@ class Server {
         // set static files directory
         this.app.use(express.static(path.join(__dirname, '../../../public')));
 
-        // 404 page
-        this.app.get('*', function(req, res) {
-            res.status(404).send('Page not found');
-        });
-
         await this.authentication.load();
 
         // load custom extension
         await this.loadExtension('example', 'example');
+
+        // 404 page
+        this.app.get('*', function(req, res) {
+            res.status(404).send('Page not found');
+        });
 
         // listen on port 80
         this.webserver.listen(process.env.PORT);
