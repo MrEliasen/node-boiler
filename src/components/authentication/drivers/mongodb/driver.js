@@ -8,6 +8,7 @@ import ProviderModel from 'mongo-models/provider';
 
 // helper/security
 import {havePasswordBeenPwned} from 'utils/security';
+import {hmac256} from 'utils/helper';
 
 /**
  * Authentication manager
@@ -34,7 +35,7 @@ class AuthMongoDB extends Authentication {
             const decoded = jwt.verify(Authorization, process.env.SECRETS_SIGNING_KEY);
 
             // check if the device name and ID matches
-            if (decoded.ip !== req.ipInfo ? req.ipInfo.ipAddress : '' || decoded.agent !== req.useragent.source) {
+            if (decoded.ip !== hmac256(req.ipInfo ? req.ipInfo.ipAddress : '') || decoded.agent !== hmac256(req.useragent.source)) {
                 return null;
             }
 

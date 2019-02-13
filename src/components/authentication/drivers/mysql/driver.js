@@ -7,6 +7,7 @@ import Authentication from 'components/authentication/authentication';
 
 // helper/security
 import {havePasswordBeenPwned, decrypt, encrypt} from 'utils/security';
+import {hmac256} from 'utils/helper';
 
 /**
  * Authentication manager
@@ -33,7 +34,7 @@ class AuthMySQL extends Authentication {
             const decoded = jwt.verify(Authorization, process.env.SECRETS_SIGNING_KEY);
 
             // check if the device name and ID matches
-            if (decoded.ip !== req.ipInfo ? req.ipInfo.ipAddress : '' || decoded.agent !== req.useragent.source) {
+            if (decoded.ip !== hmac256(req.ipInfo ? req.ipInfo.ipAddress : '') || decoded.agent !== hmac256(req.useragent.source)) {
                 return null;
             }
 
@@ -85,27 +86,12 @@ class AuthMySQL extends Authentication {
     };
 
     /**
-     * Generate the HMAC SHA256 hash of a string
-     * @param {String} string The plaintext string to hash
-     * @return {String}        Base64 encoded string
-     */
-    hamcPassword(string) {
-        // hash the password with SHA256, as bcrypt is limited to
-        // 72 characters so we can still make use of the whole
-        // string, should it exceed the limit.
-        const passwordHMAC = forge.hmac.create();
-        passwordHMAC.start('sha256', process.env.SECRETS_HMAC_KEY);
-        passwordHMAC.update(string, 'utf8');
-        return passwordHMAC.digest().toHex();
-    }
-
-    /**
      * Hashes and encrypts a password for storage
      * @param  {String} string The plaintext string
      * @return {String}        Base64 encoded string
      */
     async preparePassword(string) {
-        const passwordHMAC = this.hamcPassword(string);
+        const passwordHMAC = hmac256(string);
 
         // then hash the sha256 with bcrypt
         const finalPasswordHash = await bcrypt.hash(
@@ -144,7 +130,7 @@ class AuthMySQL extends Authentication {
                 passwordCipherData.iv
             );
 
-            const passwordHMAC = this.hamcPassword(string);
+            const passwordHMAC = hmac256(string);
 
             return bcrypt.compare(passwordHMAC, decryptedPasswordHMAC);
         } catch (err) {

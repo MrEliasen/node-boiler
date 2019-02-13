@@ -4,7 +4,7 @@ import LocalStrategy from 'passport-local';
 import jwt from 'jsonwebtoken';
 
 // helper/security
-import {ucfirst} from 'utils/helper';
+import {ucfirst, hmac256} from 'utils/helper';
 
 // drivers
 import drivers from './drivers';
@@ -161,8 +161,8 @@ class Authentication {
         jwt.sign(
             {
                 user,
-                ip: req.ipInfo ? req.ipInfo.ipAddress : '',
-                agent: req.useragent.source,
+                ip: hmac256(req.ipInfo ? req.ipInfo.ipAddress : ''),
+                agent: hmac256(req.useragent.source),
             },
             process.env.SECRETS_SIGNING_KEY,
             {
