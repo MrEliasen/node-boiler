@@ -1,3 +1,5 @@
+import forge from 'node-forge';
+
 /**
  * Uppercases the first letter in a string
  * @param {String} string
@@ -37,6 +39,18 @@ export function timer(ms) {
             resolve();
         }, ms);
     });
+}
+
+/**
+ * HMAC 256 a string
+ * @param  {String} string The string to hash
+ * @return {Promise}
+ */
+export function hmac256(string) {
+    const stringHMAC = forge.hmac.create();
+    stringHMAC.start('sha256', process.env.SECRETS_HMAC_KEY);
+    stringHMAC.update(string || '', 'utf8');
+    return stringHMAC.digest().toHex();
 }
 
 /**
