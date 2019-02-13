@@ -6,6 +6,7 @@ import uuid from 'uuid/v4';
 import forge from 'node-forge';
 
 import {encrypt, decrypt} from 'utils/security';
+import {hmac256} from 'utils/helper';
 
 // Define our product schema
 const UserSchema = new mongoose.Schema({
@@ -41,10 +42,7 @@ UserSchema.pre('save', async function(callback) {
 
     if (!this._id || (this.isModified('password') && typeof this.password !== 'undefined')) {
         // hash the password with SHA256, as bcrypt is limited to 72 characters
-        const passwordHMAC = forge.hmac.create();
-        passwordHMAC.start('sha256', process.env.SECRETS_HMAC_KEY);
-        passwordHMAC.update(this.password, 'utf8');
-        const passwordHash = passwordHMAC.digest().toHex();
+        const passwordHash = hmac256(this.password);
 
         // then hash the sha256 with bcrypt
         const finalPasswordHash = await bcrypt.hash(
@@ -77,10 +75,7 @@ UserSchema.methods.verifyPassword = async function(submittedPassword) {
             passwordCipherData.iv
         );
 
-        const passwordHMAC = forge.hmac.create();
-        passwordHMAC.start('sha256', process.env.SECRETS_HMAC_KEY);
-        passwordHMAC.update(submittedPassword, 'utf8');
-        const passwordHash = passwordHMAC.digest().toHex();
+        const passwordHash = hmac256(submittedPassword);
 
         return bcrypt.compare(passwordHash, decryptedPasswordHash);
     } catch (err) {
