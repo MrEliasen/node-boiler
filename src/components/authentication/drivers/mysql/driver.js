@@ -275,7 +275,7 @@ class AuthMySQL extends Authentication {
     authenticateLocal = async (username, password, callback) => {
         try {
             const email = validator.stripLow('' + username, false).trim().toLowerCase();
-            const password = '' + password;
+            password = '' + password;
 
             if (validator.isEmpty(email) || !validator.isEmail(email)) {
                 res.status(400).json({error: 'Invalid login details.'});
