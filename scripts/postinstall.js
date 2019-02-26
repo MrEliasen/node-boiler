@@ -75,18 +75,6 @@ try {
         logger.notification('[SETUP] Skipping HMAC key, already exists.');
     }
 
-    // Generate password storage encryption key if needed
-    if (configData.includes('SECRETS_PASSWORD_KEY=""')) {
-        logger.notification('[SETUP] Generating pass encryption key..');
-        const passwordKey = crypto.randomBytes(32).toString('hex');
-        configData = configData.replace(
-            'SECRETS_PASSWORD_KEY=""',
-            `SECRETS_PASSWORD_KEY="${passwordKey}"`
-        );
-    } else {
-        logger.notification('[SETUP] Skipping pass encryption key, already exists.');
-    }
-
     fs.writeFileSync(envFilePath, configData);
 } catch (err) {
     logger.error(err);
