@@ -92,10 +92,13 @@ class AuthMySQL extends Authentication {
      */
     async preparePassword(string) {
         // then hash the password with argon2
-        const finalPasswordHash = await argon2.hash(
-            string,
-            parseInt(process.env.SECURITY_PASSWORD_ROUNDS, 10)
-        );
+        const finalPasswordHash = await argon2.hash(string, {
+            type: argon2[process.env.PASSWORD_HASH_TYPE],
+            memoryCost: process.env.PASSWORD_HASH_MEMORY_COST,
+            timeCost: process.env.PASSWORD_HASH_TIME_COST,
+            parallelism: process.env.PASSWORD_HASH_PARALLELISM,
+            hashLength: process.env.PASSWORD_HASH_LENGTH,
+        });
 
         // and encrypt the hash
         const encryptedPassword = await encrypt(finalPasswordHash);
