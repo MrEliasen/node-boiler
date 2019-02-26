@@ -44,9 +44,9 @@
     },
     "dependencies": {
         "@sendgrid/mail": "^6.3.1",
+        "argon2": "^0.20.1",
         "babel-plugin-module-resolver": "^2.7.1",
         "babel-plugin-transform-runtime": "^6.23.0",
-        "bcrypt": "^3.0.2",
         "bcrypt-nodejs": "^0.0.3",
         "bluebird": "^3.5.3",
         "body-parser": "^1.18.3",

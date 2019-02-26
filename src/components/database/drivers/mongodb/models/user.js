@@ -1,12 +1,11 @@
 // Load required packages
 import mongoose from 'mongoose';
 import moment from 'moment';
-import bcrypt from 'bcrypt';
+import argon2 from 'argon2';
 import uuid from 'uuid/v4';
 import forge from 'node-forge';
 
 import {encrypt, decrypt} from 'utils/security';
-import {hmac256} from 'utils/helper';
 
 // Define our product schema
 const UserSchema = new mongoose.Schema({
@@ -41,12 +40,9 @@ UserSchema.pre('save', async function(callback) {
     }
 
     if (!this._id || (this.isModified('password') && typeof this.password !== 'undefined')) {
-        // hash the password with SHA256, as bcrypt is limited to 72 characters
-        const passwordHash = hmac256(this.password);
-
-        // then hash the sha256 with bcrypt
-        const finalPasswordHash = await bcrypt.hash(
-            passwordHash,
+        // then hash the password with argon2
+        const finalPasswordHash = await argon2.hash(
+            this.password,
             parseInt(process.env.SECURITY_PASSWORD_ROUNDS, 10)
         );
 
@@ -75,9 +71,7 @@ UserSchema.methods.verifyPassword = async function(submittedPassword) {
             passwordCipherData.iv
         );
 
-        const passwordHash = hmac256(submittedPassword);
-
-        return bcrypt.compare(passwordHash, decryptedPasswordHash);
+        return argon2.verify(decryptedPasswordHash, submittedPassword);
     } catch (err) {
         return false;
     }

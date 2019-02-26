@@ -1,6 +1,6 @@
 import validator from 'validator';
 import jwt from 'jsonwebtoken';
-import bcrypt from 'bcrypt';
+import argon2 from 'argon2';
 import uuid from 'uuid/v4';
 import forge from 'node-forge';
 import Authentication from 'components/authentication/authentication';
@@ -91,11 +91,9 @@ class AuthMySQL extends Authentication {
      * @return {String}        Base64 encoded string
      */
     async preparePassword(string) {
-        const passwordHMAC = hmac256(string);
-
-        // then hash the sha256 with bcrypt
-        const finalPasswordHash = await bcrypt.hash(
-            passwordHMAC,
+        // then hash the password with argon2
+        const finalPasswordHash = await argon2.hash(
+            string,
             parseInt(process.env.SECURITY_PASSWORD_ROUNDS, 10)
         );
 
@@ -125,14 +123,12 @@ class AuthMySQL extends Authentication {
                 return false;
             }
 
-            const decryptedPasswordHMAC = await decrypt(
+            const decryptedPasswordHash = await decrypt(
                 passwordCipherData.cipherText,
                 passwordCipherData.iv
             );
 
-            const passwordHMAC = hmac256(string);
-
-            return bcrypt.compare(passwordHMAC, decryptedPasswordHMAC);
+            return argon2.verify(decryptedPasswordHash, string);
         } catch (err) {
             return false;
         }
