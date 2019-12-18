@@ -12,7 +12,7 @@ A resonable flexible node boiler plate. Not overly packed with features, I try t
 1. Clone or download repository
 2. Run `yarn/npm install`
 3. Rename `.env-example` to `.env`
-    - Make any necessary changes to the .env file
+    - Make any necessary changes to the .env file. The "Secrets" are mandatory, and should be 64 characters long.
 4. Run `yarn/npm run dev`
 
 ## Serving
