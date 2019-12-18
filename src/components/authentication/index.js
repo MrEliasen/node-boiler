@@ -52,16 +52,21 @@ class Authentication {
         this.routes.post('/login',
             [
                 body('username').isLength({min: 2}),
-                body('password').isLength({min: 8}),
+                body('password').isLength({
+                    min: process.env.PASSWORD_MINLEN,
+                    max: process.env.PASSWORD_MAXLEN
+                }),
             ],
             this.middlewareCheckForErrors,
             this.login
         );
         this.routes.post('/signup',
             [
-                body('name').isLength({min: 2}),
-                body('email').isEmail(),
-                body('password').isLength({min: 8}),
+                body('username').isLength({min: 2}),
+                body('password').isLength({
+                    min: process.env.PASSWORD_MINLEN,
+                    max: process.env.PASSWORD_MAXLEN
+                }),
             ],
             this.middlewareCheckForErrors,
             this.createAccount
@@ -227,14 +232,6 @@ class Authentication {
             if (validator.isEmpty(username) || validator.isEmpty(password)) {
                 res.status(400).json({
                     error: 'Please fill out all the required details.',
-                });
-                return;
-            }
-
-            if (password.length < process.env.PASSWORD_MINLEN ||
-                password.length > process.env.PASSWORD_MAXLEN) {
-                res.status(400).json({
-                    error: `Your password must be at least ${process.env.PASSWORD_MINLEN} characters long.`,
                 });
                 return;
             }
