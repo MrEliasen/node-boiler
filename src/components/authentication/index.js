@@ -195,8 +195,8 @@ class Authentication {
 
             jwt.sign(
                 {
-                    id: userAccount._id.toString(),
-                    session: userAccount.session_token,
+                    id: account._id.toString(),
+                    session: account.session_token,
                 },
                 process.env.SECRETS_SIGNING_KEY,
                 {
