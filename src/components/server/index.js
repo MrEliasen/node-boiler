@@ -13,6 +13,7 @@ import Database from '../database';
 import Cache from '../cache';
 import Mailer from '../mailer';
 import Authentication from '../authentication';
+import Socket from '../socket';
 
 /**
  * Server Class
@@ -46,6 +47,7 @@ class Server {
         this.mailer = new Mailer(this);
         this.authentication = new Authentication(this);
         this.auth = this.authentication; // a shorthand of the auth component.
+        this.socket = new Socket(this);
 
         process.on('uncaughtException', async (err) => {
             this.logger.error(err);
@@ -98,6 +100,7 @@ class Server {
         await this.cache.load();
         await this.mailer.load();
         await this.auth.load();
+        await this.socket.load();
 
         // listen on port 80
         this.webserver.listen(process.env.PORT);

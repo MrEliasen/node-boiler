@@ -158,6 +158,67 @@ class Authentication {
                 error: 'Invalid authentication token.',
             });
         }
+    }
+
+    /**
+     * Attempts to authenticate a socket and bind the user to the socket object
+     * @param  {Socket} socket  The socket client object
+     * @param  {String} token   JWT
+     */
+    authenticateSocket = async (socket, token) => {
+        try {
+            if (!authorization) {
+                socket.emit('auth', {
+                    error: 'Missing authentication token.',
+                });
+                return;
+            }
+
+            const decodedToken = await this.validateToken(token);
+
+            if (!decodedToken) {
+                socket.emit('auth', {
+                    error: 'Invalid authentication token.',
+                });
+                return;
+            }
+
+            const account = await AccountModel.findOne({
+                _id: decodedToken.id,
+                session_token: decodedToken.session,
+            });
+
+            if (!account) {
+                socket.emit('auth', {
+                    error: 'Invalid authentication token.',
+                });
+                return;
+            }
+
+            socket.user = account.toObject();
+            socket.emit('auth', {
+                message: 'Invalid authentication token.',
+            });
+        } catch (err) {
+            if (err.name && err.name === 'JsonWebTokenError') {
+                socket.emit('auth', {
+                    error: 'Invalid authentication token.',
+                });
+                return;
+            }
+
+            if (err.name && err.name === 'TokenExpiredError') {
+                socket.emit('auth', {
+                    error: 'Your session has expired.',
+                });
+                return;
+            }
+
+            this.server.logger.error(err);
+            socket.emit('auth', {
+                error: 'Invalid authentication token.',
+            });
+        }
     };
 
     /**
