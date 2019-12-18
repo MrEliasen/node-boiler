@@ -286,22 +286,18 @@ class Authentication {
      * @return {String}        Base64 encoded string
      */
     async preparePassword(string) {
-        try {
-            // then hash the password with argon2
-            const finalPasswordHash = await argon2.hash(string, {
-                type: argon2[process.env.PASSWORD_HASH_TYPE],
-                memoryCost: process.env.PASSWORD_HASH_MEMORY_COST,
-                timeCost: process.env.PASSWORD_HASH_TIME_COST,
-                parallelism: process.env.PASSWORD_HASH_PARALLELISM,
-                hashLength: process.env.PASSWORD_HASH_LENGTH,
-            });
+        // then hash the password with argon2
+        const finalPasswordHash = await argon2.hash(string, {
+            type: argon2[process.env.PASSWORD_HASH_TYPE],
+            memoryCost: process.env.PASSWORD_HASH_MEMORY_COST,
+            timeCost: process.env.PASSWORD_HASH_TIME_COST,
+            parallelism: process.env.PASSWORD_HASH_PARALLELISM,
+            hashLength: process.env.PASSWORD_HASH_LENGTH,
+        });
 
-            // and encrypt the hash
-            const encryptedPassword = await encrypt(finalPasswordHash);
-            return forge.util.encode64(JSON.stringify(encryptedPassword));
-        } catch (err) {
-            this.server.logger.error(err);
-        }
+        // and encrypt the hash
+        const encryptedPassword = await encrypt(finalPasswordHash);
+        return forge.util.encode64(JSON.stringify(encryptedPassword));
     }
 
     /**
