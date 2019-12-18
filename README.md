@@ -5,7 +5,8 @@ A resonable flexible node boiler plate. Not overly packed with features, I try t
 ## Requirements
 
 * Node (Tested using v10)
-* A MongoDB (I recommend [MongoDB Atlas](https://www.mongodb.com/cloud/atlas). They have a free tier.)
+* A MongoDB (I recommend [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) (they have a free tier).
+* Redis (needed for caching, and scaling web sockets with pub/sub).
 
 ## Installation
 
@@ -21,3 +22,25 @@ To deploy:
 
 1. Transpile the code `yarn/npm run build` (yarn might encounter some issues if you use nvm)
 2. Serve it `yarn/npm run start`
+
+## API Endpoints
+
+**Login**
+
+- Endpoint: `/auth/login`
+- Method: `POST`
+- Payload: `username,password`
+
+**Sign Up**
+
+- Endpoint: `/auth/signup`
+- Method: `POST`
+- Payload: `username,password`
+
+## Socket Events (Client)
+
+**Authenticate**
+Authenticates the socket using the JWT returned from the login API call. This will add the user object to the socket client on the server-side, allowing you to check who the socket belongs to, example: `socket.user = {_id: .., username: ..., etc..}`.
+
+- eventName: `authenticate`
+- args: `<string> JWT`
