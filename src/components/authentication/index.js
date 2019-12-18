@@ -207,7 +207,9 @@ class Authentication {
                         throw err;
                     }
 
-                    res.status(200).json(token);
+                    res.status(200).json({
+                        token,
+                    });
                 }
             );
         } catch (err) {
