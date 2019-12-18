@@ -254,7 +254,7 @@ class Authentication {
             const newAccount = new AccountModel({
                 username: sanitize(username),
                 password: preparedPassword,
-                session_key: sessionKey,
+                session_token: sessionKey,
                 created_date: moment().utc().toDate(),
             });
 
