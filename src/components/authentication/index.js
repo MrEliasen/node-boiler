@@ -167,8 +167,8 @@ class Authentication {
      */
     login = async (req, res) => {
         try {
-            username = req.body.username;
-            password = req.body.password;
+            const username = req.body.username;
+            const password = req.body.password;
 
             const account = await AccountModel.findOne({
                 username: sanitize(username),
