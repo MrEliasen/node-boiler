@@ -37,6 +37,41 @@ export async function havePasswordBeenPwned(password) {
 }
 
 /**
+ * Generates a random string or string of bytes of a given length
+ * @param  {Number}  length The length in bytes
+ * @param  {Boolean} toHex  Whether to convert the bytes to hex
+ * @return {String|Binary}
+ */
+export async function getRandomBytes(length = 32, toHex = false) {
+    const bytes = await forge.random.getBytes(32);
+    return toHex ? forge.util.bytesToHex(bytes) : bytes;
+}
+/**
+ * HMAC a value with a key
+ * @param  {String} value   The value to HMAC
+ * @param  {String} key     The key to sign with
+ * @param  {String} cipher  The cipher to use
+ * @return {String}
+ */
+export function hmac(value, key = null, cipher = 'sha1') {
+    const hmac = forge.hmac.create();
+    hmac.start(cipher, key || process.env.SECRETS_HMAC_KEY);
+    hmac.update(value);
+    return hmac.digest().toHex();
+}
+
+/**
+ * Returns an MD5 Hash of a string
+ * @param  {String} value The value to hash
+ * @return {String}
+ */
+export function md5(value) {
+    const md = forge.md.md5.create();
+    md.update(value);
+    return md.digest().toHex();
+}
+
+/**
  * Encrypt data using a global secret
  * @param  {String} payload String you want to encrypt
  * @return {Object} Generated IV and ciphertext

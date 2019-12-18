@@ -1,4 +1,29 @@
-import forge from 'node-forge';
+/**
+ * Decodes a string, returns string original string or json object if decoded.
+ * @param {String} string
+ * @return {String}
+ */
+export function jsonSafeDecode(string) {
+    try {
+        const json = JSON.parse(string);
+        return json;
+    } catch (err) {
+        return string;
+    }
+}
+
+/**
+ * Decodes a string, returns string original string or json object if decoded.
+ * @param {String} payload
+ * @return {String}
+ */
+export function jsonSafeEncode(payload) {
+    try {
+        return JSON.stringify(payload);
+    } catch (err) {
+        return payload;
+    }
+}
 
 /**
  * Uppercases the first letter in a string
@@ -39,37 +64,4 @@ export function timer(ms) {
             resolve();
         }, ms);
     });
-}
-
-/**
- * HMAC 256 a string
- * @param  {String} string The string to hash
- * @return {Promise}
- */
-export function hmac256(string) {
-    const stringHMAC = forge.hmac.create();
-    stringHMAC.start('sha256', process.env.SECRETS_HMAC_KEY);
-    stringHMAC.update(string || '', 'utf8');
-    return stringHMAC.digest().toHex();
-}
-
-/**
- * Generates a random value between min and max
- * @param  {Number} min
- * @param  {Number} max
- * @return {Number}
- */
-export function numberBetween(min, max) {
-    min = parseInt(min, 10);
-    max = parseInt(max, 10);
-
-    if (isNaN(min) || isNaN(max)) {
-        return 0;
-    }
-
-    return Math.floor(
-        (Math.random() * (
-            Math.max(min, max) - Math.min(min, max)
-        )) + Math.min(min, max)
-    );
 }

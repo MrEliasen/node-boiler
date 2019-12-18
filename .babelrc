@@ -1,42 +1,9 @@
 {
     "presets": [
-        "env",
-        "stage-2"
+        "@babel/preset-env",
     ],
     "plugins": [
-        ["transform-runtime", {
-            "polyfill": false,
-            "regenerator": true
-        }]
-    ],
-    "env": {
-        "development": {
-            "plugins": [
-                ["module-resolver", {
-                    "cwd": "babelrc",
-                    "root": ["."],
-                    "alias": {
-                        "utils": "./src/utils",
-                        "components": "./src/components",
-                        "mongo-models": "./src/components/database/drivers/mongodb/models",
-                        "extensions": "./src/extensions"
-                    }
-                }]
-            ]
-        },
-        "production": {
-            "plugins": [
-                ["module-resolver", {
-                    "cwd": "babelrc",
-                    "root": ["."],
-                    "alias": {
-                        "utils": "./build/utils",
-                        "components": "./build/components",
-                        "mongo-models": "./build/components/database/drivers/mongodb/models",
-                        "extensions": "./build/extensions"
-                    }
-                }]
-            ]
-        }
-    }
+        "@babel/transform-runtime",
+        "@babel/plugin-proposal-class-properties"
+    ]
 }

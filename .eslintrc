@@ -3,25 +3,23 @@
         "google",
         "plugin:security/recommended"
     ],
-    "env": {
-        "browser": false,
-        "node": true
-    },
     "parser": "babel-eslint",
     "rules": {
-        "quotes": "off",
-        "spaced-comment": "off",
-        "indent": [1, 4, { "SwitchCase": 1 }],
-        "no-invalid-this": "off",
+        "quotes": "single",
         "security/detect-object-injection": "off",
-        "security/detect-non-literal-require": "off"
+        "security/detect-non-literal-require": "off",
+        "max-len": [
+            "error", {
+                "ignoreTemplateLiterals": true,
+                "ignoreStrings": true,
+                "ignoreUrls": true
+            }
+        ],
+        "indent": [1, 4, {
+            "SwitchCase": 1
+        }],
     },
     "plugins": [
         "security"
-    ],
-    "settings": {
-        "import/resolver": {
-            "babel-module": {}
-        }
-    },
+    ]
 }

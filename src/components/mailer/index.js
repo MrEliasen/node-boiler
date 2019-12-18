@@ -12,23 +12,30 @@ class Mailer {
      */
     constructor(server) {
         this.server = server;
+    }
 
+    /**
+     * Loads the mailing solutions
+     * @return {Promise}
+     */
+    async load() {
         try {
             switch (process.env.MAIL_DRIVER) {
                 case 'sendgrid':
-                    this.driver = new Sendgrid(this.server.logger);
+                    this.driver = new Sendgrid(this.server);
                     break;
 
                 case 'file':
-                    this.driver = new MailToLog(this.server.logger);
+                    this.driver = new MailToLog(this.server);
                     break;
 
                 case 'smtp':
-                    this.driver = new SMTP(this.server.logger);
+                    this.driver = new SMTP(this.server);
                     break;
             }
 
             this.server.logger.notification(`[Mailer] "${this.driver.name}" driver loaded.`);
+            this.server.logger.notification(`[${this.name}] loaded component.`);
         } catch (err) {
             this.server.logger.error(err);
         }
@@ -36,11 +43,13 @@ class Mailer {
 
     /**
      * Send mail using the loaded driver
-     * @param  {Object} mailOptions The mailer options
+     * @param  {String|Array}   to      The user(s) to send to
+     * @param  {String}         subject Email subject
+     * @param  {String}         message HTML/Text
      * @return {Promise}
      */
-    async send(mailOptions) {
-        await this.driver.send(mailOptions);
+    async send(to, subject, message) {
+        await this.driver.send(to, subject, message);
     }
 }
 

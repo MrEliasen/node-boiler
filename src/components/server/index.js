@@ -1,17 +1,18 @@
-import path from 'path';
 import http from 'http';
 import express from 'express';
-import bodyParser from 'body-parser';
 import helmet from 'helmet';
+import bodyParser from 'body-parser';
 import filter from 'content-filter';
-import cookieParser from 'cookie-parser';
-import geoip from 'geoip-lite';
-import useragent from 'express-useragent';
+import cors from 'cors';
 
-import Mailer from 'components/mailer';
-import Logger from 'components/logger';
-import Database from 'components/database';
-import authentication from 'components/authentication';
+// Core components
+import Logger from '../logger';
+import Database from '../database';
+
+// Function components
+import Cache from '../cache';
+import Mailer from '../mailer';
+import Authentication from '../authentication';
 
 /**
  * Server Class
@@ -19,16 +20,14 @@ import authentication from 'components/authentication';
 class Server {
     /**
      * Class constructor
+     * @param  {Boolean} autoBoot Whether the server should auto boot or not.
      */
-    constructor() {
-        // holds any extensions of the server, included from the load() method
-        this.extensions = {};
-        this.logger = new Logger(this);
-        this.mailer = new Mailer(this);
-        this.database = new Database(this);
-        this.authentication = authentication(this);
+    constructor(autoBoot = true) {
+        this.components = {};
 
-        this.boot();
+        if (autoBoot) {
+            this.boot();
+        }
     }
 
     /**
@@ -36,53 +35,69 @@ class Server {
      * @return {Promise}
      */
     async boot() {
-        await this.database.connect();
-
         // https expected to be proxied with Nginx or Dokku.
         this.app = express();
         this.webserver = http.createServer(this.app);
 
-        // bind the logger and mailer to our app
-        this.app.set('logger', this.logger);
-        this.app.set('mailer', this.mailer);
+        // load core components
+        this.logger = new Logger(this);
+        this.database = new Database(this);
+        this.cache = new Cache(this);
+        this.mailer = new Mailer(this);
+        this.authentication = new Authentication(this);
+        this.auth = this.authentication; // a shorthand of the auth component.
 
-        // Trust only the local proxy
-        this.app.set('trust proxy', 'loopback');
-        this.app.use(bodyParser.json());
-        this.app.use(bodyParser.urlencoded({
-            extended: true,
-        }));
-        this.app.use(express.json({limit: '5000kb'}));
+        process.on('uncaughtException', async (err) => {
+            this.logger.error(err);
+        });
+
+        // enable basic security
         this.app.use(helmet());
-        this.app.use(cookieParser(process.env.SECRETS_SIGNING_KEY));
-        this.app.use(useragent.express());
         this.app.use(filter({
             methodList: [
                 'GET',
+                'PUT',
                 'POST',
                 'PATCH',
                 'DELETE',
             ],
         }));
 
+        // you probably won't need raw parser.
+        /*this.app.use(bodyParser.raw({
+            inflate: true,
+            limit: '5mb',
+            type: 'text/plain',
+        }));*/
+        // set http body limits
+        this.app.use(bodyParser.urlencoded({
+            limit: '5mb',
+            extended: true,
+        }));
+        this.app.use(bodyParser.json({
+            limit: '5mb',
+        }));
+        this.app.use(express.json({
+            limit: '5mb',
+        }));
+
         // Set needed headers for the application.
-        this.app.use(this.middlewareHeaders);
+        this.app.options('*', cors());
+        this.app.use(cors());
 
-        // GEO IP lookup
-        this.app.use(this.middlewareGeoIP);
+        // bind the logger
+        this.app.set('logger', this.logger);
 
-        // set static files directory
-        this.app.use(express.static(path.join(__dirname, '../../../public')));
+        // Trust only the local proxy
+        this.app.set('trust proxy', 'loopback');
 
-        await this.authentication.load();
+        // parse and find the connecting user's IP
+        this.app.use(this.getConnectionIP);
 
-        // load custom extension
-        await this.loadExtension('example', 'example');
-
-        // 404 page
-        this.app.get('*', function(req, res) {
-            res.status(404).send('Page not found');
-        });
+        await this.database.load();
+        await this.cache.load();
+        await this.mailer.load();
+        await this.auth.load();
 
         // listen on port 80
         this.webserver.listen(process.env.PORT);
@@ -90,126 +105,47 @@ class Server {
     }
 
     /**
-     * Loads an extension of the server
-     * @param  {String} filePath The path to the file to include
-     * @param  {String} name     The name of the extension (alphanumerical)
+     * Find the connection IP
+     * @param  {Request}  req  Express Request object
+     * @param  {Response} res  Express Response object
+     * @param  {Function} next Express "next" function
      */
-    async loadExtension(filePath, name) {
+    getConnectionIP = (req, res, next) => {
         try {
-            const extensionDir = path.join(__dirname, '../../extensions/');
-            const Extension = require(extensionDir + filePath);
+            const remoteIp = req.connection.remoteAddress;
+            let pseudoRealIp = remoteIp;
 
-            if (Extension.default) {
-                this.extensions[name] = new Extension.default(this);
-            } else {
-                this.extensions[name] = new Extension(this);
+            // check for proxy headers and cloudflare
+            const proxyHeader = req.get('X-Forwarded-For');
+            const cfHeader = req.get('CF-Connecting-IP');
+
+            if (proxyHeader || cfHeader) {
+                pseudoRealIp = cfHeader || proxyHeader;
             }
 
-            // wait for the extension to finish loading
-            await this.extensions[name].load();
-
-            let urlPrefix = '';
-            // if the extension adds routes, we include the urlprefix if found
-            if (this.extensions[name].urlPrefix) {
-                urlPrefix = `(route prefix: ${this.extensions[name].urlPrefix})`;
+            // IPV6 addresses can include IPV4 addresses
+            // So req.ip can be '::ffff:86.3.182.58'
+            if (remoteIp.includes('::ffff:')) {
+                pseudoRealIp = remoteIp.split(':').reverse()[0];
             }
 
-            this.logger.notification(`[Extensions] "${name}" loaded ${urlPrefix}`);
-        } catch (err) {
-            this.logger.notification(`[Extensions] Failed to load the extension "${name}"`);
-            this.logger.error(err);
-        }
-    }
+            if (process.env.NODE_ENV !== 'development') {
+                if (pseudoRealIp === '127.0.0.1' || pseudoRealIp === '::1') {
+                    res.status(400).json({
+                        error: 'You cannot connect from a local IP',
+                    });
+                    return;
+                }
+            }
 
-    /**
-     * Outputs required headers in responses
-     * @param  {Request}    req     Express Request Object
-     * @param  {Response}   res     Express Response Object
-     * @param  {Function}   next
-     */
-    middlewareHeaders(req, res, next) {
-        // Website you wish to allow to connect
-        res.setHeader(
-            'Access-Control-Allow-Origin',
-            '*'
-        );
-        // Request methods you wish to allow
-        res.setHeader(
-            'Access-Control-Allow-Methods',
-            'GET, POST, PATCH, DELETE, OPTIONS'
-        );
-        // Request headers you wish to allow
-        res.setHeader(
-            'Access-Control-Allow-Headers',
-            'Authorization, Accept, X-Requested-With, Content-Type'
-        );
-        // Whether requests needs to include cookies in the requests
-        // sent to the API. We shouldn't use this unless we retained
-        // sessions etc. which we don't!
-        res.setHeader( 'Access-Control-Allow-Credentials', false);
-
-        // Pass to next middleware
-        next();
-    }
-
-    /**
-     * Attaches Geo IP data to all requests
-     * @param  {Request}    req     Express Request Object
-     * @param  {Response}   res     Express Response Object
-     * @param  {Function}   next
-     */
-    middlewareGeoIP = (req, res, next) => {
-        try {
-            const xForwardedFor = ('' + req.get('x-forwarded-for')).replace(/:\d+$/, '');
-            const ip = xForwardedFor || req.get('cf-connecting-ip') ||req.connection.remoteAddress || req.get('x-real-ip');
-            const geoipInfo = this.getIpInfo(ip);
-
-            req.ipInfo = {
-                ipAddress: ip || 'Unknown',
-                city: 'Unknown',
-                country: 'Unknown',
-                ...geoipInfo,
-            };
-
+            req.pseudoRealIp = pseudoRealIp;
             next();
         } catch (err) {
-            if (process.env.NODE_ENV !== 'production') {
-                next();
-                return;
-            }
-
-            this.logger.warn(err);
-            res.status(401).json({
-                status: 400,
-                message: 'Missing required headers',
+            this.logger.error(err);
+            res.status(500).json({
+                error: 'Unable to process you request.',
             });
         }
-    }
-
-    /**
-     * Get Geo information for a given IP
-     * @param  {String} ip IP address
-     * @return {Object}
-     */
-    getIpInfo = (ip) => {
-        // IPV6 addresses can include IPV4 addresses
-        // So req.ip can be '::ffff:86.3.182.58'
-        // However geoip-lite returns null for these
-        if (ip.includes('::ffff:')) {
-            ip = ip.split(':').reverse()[0];
-        }
-
-        if (ip === '127.0.0.1' || ip === '::1') {
-            throw new Error('This won\'t work on localhost');
-        }
-
-        const lookedUpIP = geoip.lookup(ip);
-
-        if (!lookedUpIP) {
-            throw new Error('Unable to lookup IP addresses.');
-        }
-
-        return lookedUpIP;
     }
 }
 
