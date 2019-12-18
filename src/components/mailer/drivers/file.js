@@ -2,14 +2,13 @@ import fs from 'fs';
 import mkdirp from 'mkdirp';
 import path from 'path';
 
-const render = (mailOptions) => (
+const render = (to, subject, message) => (
     `<!--
-    From: ${mailOptions.from}
-    To: ${mailOptions.to}
-    Subject: ${mailOptions.subject}
+    To: ${to}
+    Subject: ${subject}
     Send Date: ${new Date().toString()}
 -->
-${mailOptions.html}`);
+${message}`);
 
 /**
  * Sendgrid mailer class
@@ -17,11 +16,11 @@ ${mailOptions.html}`);
 export default class File {
     /**
      * Class constructor
-     * @param  {logger} logger The application logger
+     * @param  {Server} server The server object
      */
-    constructor(logger) {
+    constructor(server) {
         this.name = 'File';
-        this.logger = logger;
+        this.server = server;
         this.createOutputDir(process.env.MAIL_FILE_PATH);
     }
 
@@ -35,14 +34,21 @@ export default class File {
     }
 
     /**
-     * @param {Object} mailOptions The mail options
+     * Saves the email details to file
+     * @param  {String|Array}   to      The user(s) to send to
+     * @param  {String}         subject Email subject
+     * @param  {String}         message HTML/Text
      */
-    async send(mailOptions) {
+    async send(to, subject, message) {
         const fileName = path.join(
             this.outputPath,
             new Date().toISOString().replace(/[^0-9Z]+/g, '-')
         ).slice(0, -1);
 
-        await fs.writeFile(`${fileName}.html`, render(mailOptions));
+        if (Array.isArray(to)) {
+            to = to.join(', ');
+        }
+
+        await fs.writeFile(`${fileName}.html`, render(to, subject, message));
     }
 }

@@ -25,7 +25,7 @@ class Logger {
         const rootPath = path.join(__dirname, '../../..');
 
         config = {
-            level: process.env.NODE_ENV === 'production' ? 'error' : 'info',
+            level: process.env.NODE_ENV !== 'production' ? 'info' : 'error',
             debugFile: `${rootPath}/logs/debug.log`,
             infoFile: `${rootPath}/logs/info.log`,
             warnFile: `${rootPath}/logs/warn.log`,
@@ -71,6 +71,15 @@ class Logger {
             levels.indexOf('error'),
             level
         );
+        const consoleFatal = new ConsoleLogger(
+            {
+                groupName: 'FATAL:',
+                method: 'error',
+                color: chalk.purple,
+            },
+            levels.indexOf('error'),
+            level
+        );
 
         // create file loggers
         const fileDebug = new FileLogger(
@@ -105,6 +114,14 @@ class Logger {
             levels.indexOf('error'),
             level
         );
+        const fileFatal = new FileLogger(
+            {
+                groupName: 'FATAL:',
+                file: config.errorFile,
+            },
+            levels.indexOf('error'),
+            level
+        );
 
         // system notitications
         const notification = new Notification();
@@ -115,10 +132,12 @@ class Logger {
             consoleDebug,
             consoleWarn,
             consoleError,
+            consoleFatal,
             fileInfo,
             fileDebug,
             fileWarn,
             fileError,
+            fileFatal,
         };
 
         // create the individual loggers with the console and file loggers
@@ -126,6 +145,7 @@ class Logger {
         this.info = this.run(consoleInfo, fileInfo);
         this.warn = this.run(consoleWarn, fileWarn);
         this.error = this.run(consoleError, fileError);
+        this.fatal = this.run(consoleFatal, fileFatal);
         this.notification = this.run(notification);
 
         this.notification(`[Logger] the logger was setup with log-level "${config.level}"`);
@@ -153,6 +173,10 @@ class Logger {
      */
     run(...actions) {
         return (...args) => {
+            if (process.env.NODE_ENV === 'test') {
+                return;
+            }
+
             const data = this.parse(...args);
             return Promise.all(actions.map((action) => action.log(data)));
         };

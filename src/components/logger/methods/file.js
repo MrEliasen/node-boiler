@@ -1,4 +1,5 @@
 import fs from 'fs';
+import path from 'path';
 
 /**
  * https://gist.github.com/etalisoft/81280a2a1a312ca6aab91daa909ccba0
@@ -16,6 +17,11 @@ class File {
         this.loggerLevel = loggerLevel;
         this.file = config.file || './File.log';
         this.groupName = config.groupName || 'LOG:';
+
+        const logsDirPath = path.join(__dirname, '../../../../logs'); ;
+        if (!fs.existsSync(logsDirPath)) {
+            fs.mkdirSync(logsDirPath);
+        }
     }
 
     /**

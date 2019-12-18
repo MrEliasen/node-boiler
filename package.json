@@ -1,88 +1,66 @@
 {
     "name": "node-boiler",
-    "version": "0.9.0",
-    "description": "The boiler plate for a node server. Nothing too fancy really.",
+    "version": "1.0.0",
+    "description": "A resonable flexible node boiler plate. Not overly packed with features, I try to keep it resonably bloat free.",
     "scripts": {
-        "postinstall": "cross-env NODE_ENV=development babel-node scripts/postinstall.js --presets env,stage-2",
         "build:clean": "rimraf ./build",
-        "build:src": "cross-env NODE_ENV=production babel src --out-dir build --source-maps cheap-module-source-map",
-        "build:utils": "babel src/utils --out-dir build/utils",
-        "build:copy": "copyfiles -u 1 ./src/public/* ./build && copyfiles -u 1 ./src/errors/* ./build",
-        "build": "npm run build:clean && npm run build:utils && npm run build:src && npm run build:copy",
+        "build:src": "cross-env NODE_ENV=production babel ./src --out-dir ./build --source-maps cheap-module-source-map",
+        "build:utils": "babel ./src/utils --out-dir ./build/utils",
+        "build:copy": "copyfiles -u 1 ./src/public/* ./build",
+        "build:templates": "copyfiles -u 4 ./src/components/notification/templates/* ./build/components/notification/templates",
+        "build": "npm run build:clean && npm run build:utils && npm run build:src && npm run build:copy && npm run build:templates",
         "dev": "cross-env NODE_ENV=development nodemon -L ./src --inspect --exec babel-node --presets env,stage-2",
-        "start": "cross-env NODE_ENV=production node ./build"
-    },
-    "engines": {
-        "node": ">=10.14.2"
-    },
-    "repository": {
-        "type": "git",
-        "url": "git+https://github.com/MrEliasen/node-boiler.git"
+        "start": "node ./build"
     },
     "author": "Mark Eliasen (hello@sirmre.com)",
-    "bugs": {
-        "url": "https://github.com/MrEliasen/node-boiler/issues"
-    },
     "nodemonConfig": {
         "ignore": [
             "node_modules/*",
             "build/*",
             "logs/*",
-            "*.log"
+            "*.log",
+            "*.json"
         ]
     },
-    "devDependencies": {
+    "dependencies": {
+        "@sendgrid/mail": "^6.4.0",
+        "argon2": "^0.24.0",
+        "babel": "^6.23.0",
         "babel-cli": "^6.26.0",
+        "babel-core": "^6.26.3",
         "babel-eslint": "^10.0.1",
+        "babel-plugin-module-resolver": "^2.7.1",
+        "babel-plugin-transform-runtime": "^6.23.0",
         "babel-polyfill": "^6.26.0",
         "babel-preset-env": "^1.7.0",
         "babel-preset-stage-2": "^6.24.1",
-        "copyfiles": "^2.1.0",
-        "eslint": "^5.10.0",
-        "eslint-config-google": "^0.11.0",
-        "eslint-plugin-security": "^1.4.0"
-    },
-    "dependencies": {
-        "@sendgrid/mail": "^6.3.1",
-        "argon2": "^0.20.1",
-        "babel-plugin-module-resolver": "^2.7.1",
-        "babel-plugin-transform-runtime": "^6.23.0",
-        "bcrypt-nodejs": "^0.0.3",
-        "bluebird": "^3.5.3",
-        "body-parser": "^1.18.3",
+        "bluebird": "^3.7.2",
+        "body-parser": "^1.19.0",
         "chalk": "^2.4.1",
         "content-filter": "^1.1.2",
-        "cookie-parser": "^1.4.3",
+        "copyfiles": "^2.1.0",
+        "cors": "^2.8.5",
         "cross-env": "^5.2.0",
         "dotenv": "^6.2.0",
-        "escape-string-regexp": "^1.0.5",
+        "eslint": "^5.10.0",
+        "eslint-config-google": "^0.11.0",
+        "eslint-plugin-security": "^1.4.0",
         "express": "^4.16.4",
-        "express-brute": "^1.0.1",
-        "express-brute-redis": "^0.0.1",
-        "express-limiter": "^1.6.1",
-        "express-useragent": "^1.0.12",
-        "geoip-lite": "^1.3.5",
-        "helmet": "^3.15.0",
-        "jsonwebtoken": "^8.4.0",
+        "express-validator": "^6.1.1",
+        "helmet": "^3.18.0",
+        "jsonwebtoken": "^8.5.1",
         "mkdirp": "^0.5.1",
-        "moment": "^2.23.0",
-        "moment-timezone": "^0.5.23",
+        "moment-timezone": "^0.5.26",
         "mongo-sanitize": "^1.0.1",
-        "mongoose": "^5.4.0",
-        "mysql": "^2.16.0",
+        "mongoose": "^5.6.11",
         "node-forge": "^0.7.6",
-        "nodemailer": "^4.7.0",
-        "nodemon": "^1.18.9",
-        "passport": "^0.4.0",
-        "passport-github": "^1.1.0",
-        "passport-local": "^1.0.0",
-        "promise-mysql": "^3.3.1",
+        "nodemailer": "^6.4.2",
         "redis": "^2.8.0",
-        "request": "^2.88.0",
-        "request-promise": "^4.2.2",
+        "request-promise": "^4.2.5",
         "rimraf": "^2.6.2",
-        "uuid": "^3.3.2",
-        "validator": "^10.10.0",
-        "xss-filters": "^1.2.7"
+        "validator": "^10.11.0"
+    },
+    "devDependencies": {
+        "nodemon": "^1.18.9"
     }
 }

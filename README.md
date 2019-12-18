@@ -1,54 +1,23 @@
 # Node Boiler Plate
 
-Node Boiler Plate
+A resonable flexible node boiler plate. Not overly packed with features, I try to keep it resonably bloat free.
 
 ## Requirements
 
-* Node (recommend v10.14.2 LTS or later)
+* Node (Tested using v10)
 * A MongoDB (I recommend [MongoDB Atlas](https://www.mongodb.com/cloud/atlas). They have a free tier.)
-* or a MariaDB/MySQL database (I recommended 10.3+ or 5.6+ respectively).
 
 ## Installation
 
 1. Clone or download repository
-3. Run `yarn install`
-4. Make any necessary changes to the .env file
-5. Run `yarn run dev`
+2. Run `yarn/npm install`
+3. Rename `.env-example` to `.env`
+    - Make any necessary changes to the .env file
+4. Run `yarn/npm run dev`
 
 ## Serving
 
 To deploy:
 
-1. Transpile the code `yarn run build` or `npm run build` (yarn might encounter some issues if you use nvm)
-2. Serve it `yarn run start`
-
-## Development
-
-In `src/components/server`, inside the `boot` method, we are loading in the "example" extension, which is found in `src/extensions`.
-
-```javascript
-async boot() {
-    ...
-    // GEO IP lookup
-    this.app.use(this.middlewareGeoIP);
-
-    // load custom extension
-    await this.loadExtension('example', 'example'); // <------- HERE!
-    ...
-}
-```
-
-The server object, from which you should be able to access any part of the application, is always passed on to all loaded extensions as the first parameter.
-
-List of some of the common things you might want to access from the server object:
-
-| Members  | Type | Description | More info|
-| --- | --- | --- | --- |
-| `server` | _{Object}_ | the main server component. | docs |
-| `server.logger` | _{Object}_ | the logger component. | [docs](https://github.com/MrEliasen/node-boiler/wiki/Logger) |
-| `server.database` | _{Object}_ | the database component. | [docs](https://github.com/MrEliasen/node-boiler/wiki/Database-&-Drivers) |
-| `server.mailer` | _{Object}_ | the mailer component. | [docs](https://github.com/MrEliasen/node-boiler/wiki/Mailer) |
-| `server.extensions` | _{Array}_ | the array of loaded extensions. | [docs](https://github.com/MrEliasen/node-boiler/wiki/Extensions) |
-| `server.app` | _{Object}_ | the express application. | Is the applications express server (`this.app = express()`) |
-| `server.webserver` | _{Object}_ | the HTTP/s web server. | Is the applications webserver (`this.webserver = http.createServer(this.app)`) |
-| `server.authentication` | _{Object}_ | The authentication & sign up component. | [docs](https://github.com/MrEliasen/node-boiler/wiki/Authentication) |
+1. Transpile the code `yarn/npm run build` (yarn might encounter some issues if you use nvm)
+2. Serve it `yarn/npm run start`
