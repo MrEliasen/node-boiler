@@ -262,7 +262,7 @@ class Authentication {
             await newAccount.save();
 
             res.status(203).json({
-                message: 'Account',
+                message: 'Your account has been created.',
             });
         } catch (err) {
             if (err.code !== 11000) {
