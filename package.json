@@ -4,12 +4,12 @@
     "description": "A resonable flexible node boiler plate. Not overly packed with features, I try to keep it resonably bloat free.",
     "scripts": {
         "build:clean": "rimraf ./build",
-        "build:src": "cross-env NODE_ENV=production babel ./src --out-dir ./build --source-maps cheap-module-source-map",
+        "build:src": "cross-env NODE_ENV=production babel ./src --out-dir ./build --source-maps inline",
         "build:utils": "babel ./src/utils --out-dir ./build/utils",
         "build:copy": "copyfiles -u 1 ./src/public/* ./build",
         "build:templates": "copyfiles -u 4 ./src/components/notification/templates/* ./build/components/notification/templates",
         "build": "npm run build:clean && npm run build:utils && npm run build:src && npm run build:copy && npm run build:templates",
-        "dev": "cross-env NODE_ENV=development nodemon -L ./src --inspect --exec babel-node --presets env,stage-2",
+        "dev": "cross-env NODE_ENV=development nodemon -L ./src --inspect --exec babel-node",
         "start": "node ./build"
     },
     "author": "Mark Eliasen (hello@sirmre.com)",
@@ -23,17 +23,9 @@
         ]
     },
     "dependencies": {
+        "@babel/runtime": "^7.7.6",
         "@sendgrid/mail": "^6.4.0",
         "argon2": "^0.24.0",
-        "babel": "^6.23.0",
-        "babel-cli": "^6.26.0",
-        "babel-core": "^6.26.3",
-        "babel-eslint": "^10.0.1",
-        "babel-plugin-module-resolver": "^2.7.1",
-        "babel-plugin-transform-runtime": "^6.23.0",
-        "babel-polyfill": "^6.26.0",
-        "babel-preset-env": "^1.7.0",
-        "babel-preset-stage-2": "^6.24.1",
         "bluebird": "^3.7.2",
         "body-parser": "^1.19.0",
         "chalk": "^2.4.1",
@@ -42,9 +34,6 @@
         "cors": "^2.8.5",
         "cross-env": "^5.2.0",
         "dotenv": "^6.2.0",
-        "eslint": "^5.10.0",
-        "eslint-config-google": "^0.11.0",
-        "eslint-plugin-security": "^1.4.0",
         "express": "^4.16.4",
         "express-validator": "^6.1.1",
         "helmet": "^3.18.0",
@@ -61,6 +50,16 @@
         "validator": "^10.11.0"
     },
     "devDependencies": {
+        "@babel/cli": "^7.7.5",
+        "@babel/core": "^7.7.5",
+        "@babel/node": "^7.7.4",
+        "@babel/plugin-proposal-class-properties": "^7.7.4",
+        "@babel/plugin-transform-runtime": "^7.7.6",
+        "@babel/preset-env": "^7.7.6",
+        "babel-eslint": "^10.0.1",
+        "eslint": "^5.10.0",
+        "eslint-config-google": "^0.11.0",
+        "eslint-plugin-security": "^1.4.0",
         "nodemon": "^1.18.9"
     }
 }
