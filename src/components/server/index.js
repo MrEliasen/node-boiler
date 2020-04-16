@@ -1,3 +1,5 @@
+import fs from 'fs';
+import path from 'path';
 import http from 'http';
 import express from 'express';
 import helmet from 'helmet';
@@ -48,6 +50,9 @@ class Server {
         this.authentication = new Authentication(this);
         this.auth = this.authentication; // a shorthand of the auth component.
         this.socket = new Socket(this);
+
+        // define our extensions
+        this.extensions = {};
 
         process.on('uncaughtException', async (err) => {
             this.logger.error(err);
@@ -102,9 +107,69 @@ class Server {
         await this.auth.load();
         await this.socket.load();
 
+        // load custom extension
+        await this.loadExtensions();
+
         // listen on port 80
         this.webserver.listen(process.env.PORT);
         this.logger.notification(`[Server] listening on port ${process.env.PORT}`);
+    }
+
+    async loadExtensions() {
+        const extensionDir = path.join(__dirname, '../../extensions/');
+        const extensionFiles = fs.readdirSync(extensionDir);
+
+        if (extensionFiles.length) {
+            await Promise.all(extensionFiles.map(async (filename) => {
+                const filePath = extensionDir + filename;
+
+                if (fs.lstatSync(filePath).isDirectory()) {
+                     return true;
+                }
+
+                if (!filename.includes('.js')) {
+                    return true;
+                }
+
+                return this.loadExtension(filePath);
+            }));
+        }
+
+        return true
+    }
+
+    /**
+     * Loads an extension from a specifi path
+     * @param  {String} filePath The full path to the js file
+     * @return {Promise}         Resolves when loaded
+     */
+    async loadExtension(filePath) {
+        try {
+            const Extension = require(filePath);
+            let name;
+
+            if (Extension.default) {
+                name = Extension.default.name;
+                this.extensions[name] = new Extension.default.module(this);
+            } else {
+                name = Extension.name;
+                this.extensions[name] = new Extension.module(this);
+            }
+
+            // wait for the extension to finish loading
+            await this.extensions[name].load();
+
+            let urlPrefix = '';
+            // if the extension adds routes, we include the urlprefix if found
+            if (this.extensions[name].urlPrefix) {
+                urlPrefix = `(route prefix: ${this.extensions[name].urlPrefix})`;
+            }
+
+            this.logger.notification(`[Extensions] "${name}" loaded ${urlPrefix}`);
+        } catch (err) {
+            this.logger.notification(`[Extensions] Failed to load the extension "${name}"`);
+            this.logger.error(err);
+        }
     }
 
     /**
