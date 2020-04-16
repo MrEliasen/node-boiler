@@ -11,6 +11,7 @@ class Mailer {
      * @param  {Server} server  Server instance
      */
     constructor(server) {
+        this.name = 'Mailer';
         this.server = server;
     }
 
@@ -34,7 +35,7 @@ class Mailer {
                     break;
             }
 
-            this.server.logger.notification(`[Mailer] "${this.driver.name}" driver loaded.`);
+            this.server.logger.notification(`[${this.name}] "${this.driver.name}" driver loaded.`);
             this.server.logger.notification(`[${this.name}] loaded component.`);
         } catch (err) {
             this.server.logger.error(err);
