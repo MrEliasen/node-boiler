@@ -5,7 +5,8 @@
     ],
     "parser": "babel-eslint",
     "rules": {
-        "quotes": "single",
+        "quotes": "warn",
+        "no-invalid-this": "off",
         "security/detect-object-injection": "off",
         "security/detect-non-literal-require": "off",
         "max-len": [
