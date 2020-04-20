@@ -115,6 +115,10 @@ class Server {
         this.logger.notification(`[Server] listening on port ${process.env.PORT}`);
     }
 
+    /**
+     * Loads extensions from the /src/extensions directory
+     * @return {[type]} [description]
+     */
     async loadExtensions() {
         const extensionDir = path.join(__dirname, '../../extensions/');
         const extensionFiles = fs.readdirSync(extensionDir);
@@ -124,7 +128,7 @@ class Server {
                 const filePath = extensionDir + filename;
 
                 if (fs.lstatSync(filePath).isDirectory()) {
-                     return true;
+                    return true;
                 }
 
                 if (!filename.includes('.js')) {
@@ -135,7 +139,7 @@ class Server {
             }));
         }
 
-        return true
+        return true;
     }
 
     /**
