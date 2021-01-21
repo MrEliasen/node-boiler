@@ -48,7 +48,7 @@
         "request": "^2.88.2",
         "request-promise": "^4.2.5",
         "rimraf": "^3.0.2",
-        "socket.io": "^2.3.0",
+        "socket.io": "^2.4.0",
         "validator": "^13.0.0"
     },
     "devDependencies": {
